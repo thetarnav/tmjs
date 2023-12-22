@@ -1,4 +1,8 @@
 /*
+RESET
+*/
+
+/*
   1. Use a more-intuitive box-sizing model.
 */
 *,
@@ -59,4 +63,17 @@ h6 {
   */
 #root {
     isolation: isolate;
+}
+
+/*
+STYLES
+*/
+
+body {
+    font-family: 'Roboto', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
+    background-color: #181717;
+    color: #fafafa;
 }

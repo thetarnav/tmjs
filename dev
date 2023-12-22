@@ -1,6 +1,0 @@
-#!/bin/bash
-
-while sleep 0.1; do
-    find ./theme.jsonc |
-        entr -c -d "jsonc-parser stripComments theme.jsonc > theme.json"
-done

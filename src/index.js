@@ -1,12 +1,31 @@
 import * as shikiji from 'shikiji'
 
 const SRC_PATH = 'src/'
+const THEME_PATH = SRC_PATH + 'theme.json'
+const LANG_PATH = SRC_PATH + 'odin.tmLanguage.json'
+const CODE_PATH = SRC_PATH + 'sample.odin'
 
-/** @type {Promise<string>} */
-const code_promise = fetch(SRC_PATH + 'sample.odin').then(res => res.text())
+/**
+ * @returns {Promise<string>}
+ */
+function fetchCode() {
+    return fetch(CODE_PATH).then(res => res.text())
+}
+/**
+ * @returns {Promise<shikiji.ThemeRegistration>}
+ */
+function fetchTheme() {
+    return fetch(THEME_PATH).then(res => res.json())
+}
+/**
+ * @returns {Promise<shikiji.LanguageRegistration>}
+ */
+function fetchLang() {
+    return fetch(LANG_PATH).then(res => res.json())
+}
 
-/** @type {Promise<shikiji.ThemeRegistration>} */
-const theme_promise = fetch(SRC_PATH + 'theme.json').then(res => res.json())
+const code_promise = fetchCode()
+const theme_promise = fetchTheme()
 
 const root = document.getElementById('root')
 if (!root) throw new Error('Root el not found')
@@ -23,8 +42,7 @@ const highlighter = await shikiji.getHighlighter({
  * @returns {Promise<void>}
  */
 const update = async () => {
-    /** @type {shikiji.LanguageRegistration} */
-    const lang = await fetch(SRC_PATH + 'odin.tmLanguage.json').then(res => res.json())
+    const lang = await fetchLang()
     await highlighter.loadLanguage(lang)
 
     const html = highlighter.codeToHtml(code, {
