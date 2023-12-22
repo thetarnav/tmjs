@@ -1,20 +1,20 @@
 {
-    "compilerOptions": {
-        "composite": true,
-        "target": "ESNext",
-        "module": "NodeNext",
-        "moduleResolution": "NodeNext",
-        "lib": ["ESNext"],
-        "types": ["node"],
-        "allowJs": true,
-        "checkJs": true,
-        "skipLibCheck": true,
-        "noEmit": true,
-        "strict": true,
-        "noFallthroughCasesInSwitch": true,
-        "forceConsistentCasingInFileNames": true,
-        "noPropertyAccessFromIndexSignature": true,
-        "noUncheckedIndexedAccess": true,
-        "verbatimModuleSyntax": true
-    }
+	"compilerOptions": {
+		"composite": true,
+		"target": "ESNext",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"lib": ["ESNext"],
+		"types": ["node"],
+		"allowJs": true,
+		"checkJs": true,
+		"skipLibCheck": true,
+		"noEmit": true,
+		"strict": true,
+		"noFallthroughCasesInSwitch": true,
+		"forceConsistentCasingInFileNames": true,
+		"noPropertyAccessFromIndexSignature": true,
+		"noUncheckedIndexedAccess": true,
+		"verbatimModuleSyntax": true
+	}
 }

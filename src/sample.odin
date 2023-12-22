@@ -10,35 +10,6 @@ import "core:runtime"
 import "core:intrinsics"
 import "core:math/big"
 
-/*
-	Odin is a general-purpose programming language with distinct typing built
-	for high performance, modern systems and data-oriented programming.
-
-	Odin is the C alternative for the Joy of Programming.
-
-	# Installing Odin
-	Getting Started - https://odin-lang.org/docs/install/
-		Instructions for downloading and install the Odin compiler and libraries.
-
-	# Learning Odin
-	Getting Started - https://odin-lang.org/docs/install/
-		Getting Started with Odin. Downloading, installing, and getting your
-		first program to compile and run.
-	Overview of Odin - https://odin-lang.org/docs/overview/
-		An overview of the Odin programming language and its features.
-	Frequently Asked Questions (FAQ) - https://odin-lang.org/docs/faq/
-		Answers to common questions about Odin.
-	Packages - https://pkg.odin-lang.org/
-		Documentation for all the official packages part of the
-		core and vendor library collections.
-	Nightly Builds - https://odin-lang.org/docs/nightly/
-		Get the latest nightly builds of Odin.
-	More Odin Examples - https://github.com/odin-lang/examples
-		This repository contains examples of how certain things can be accomplished 
-		in idiomatic Odin, allowing you learn its semantics, as well as how to use 
-		parts of the core and vendor package collections.
-*/
-
 the_basics :: proc() {
 	fmt.println("\n# the basics")
 

@@ -1,19 +1,19 @@
 {
-    "name": "shikiji-playground",
-    "version": "0.0.0",
-    "type": "module",
-    "private": true,
-    "scripts": {
-        "dev": "pnpm dlx http-server ."
-    },
-    "dependencies": {
-        "shikiji": "^0.9.11",
-        "shikiji-core": "^0.9.11"
-    },
-    "devDependencies": {
-        "@types/node": "^20.10.5",
-        "chokidar": "^3.5.3",
-        "jsonc-parser": "^3.2.0",
-        "prettier": "^3.1.1"
-    }
+	"name": "shikiji-playground",
+	"version": "0.0.0",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"dev": "pnpm dlx http-server ."
+	},
+	"dependencies": {
+		"shikiji": "^0.9.11",
+		"shikiji-core": "^0.9.11"
+	},
+	"devDependencies": {
+		"@types/node": "^20.10.5",
+		"chokidar": "^3.5.3",
+		"jsonc-parser": "^3.2.0",
+		"prettier": "^3.1.1"
+	}
 }
