@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="/reset.css" />
+        <script type="importmap">
+            {
+                "imports": {
+                    "shikiji": "./node_modules/shikiji/dist/index.mjs",
+                    "shikiji/core": "./node_modules/shikiji/dist/core.mjs",
+                    "shikiji/wasm": "./node_modules/shikiji/dist/wasm.mjs",
+                    "shikiji/langs": "./node_modules/shikiji/dist/langs.mjs",
+                    "shikiji/themes": "./node_modules/shikiji/dist/themes.mjs",
+                    "shikiji/bundle/full": "./node_modules/shikiji/dist/bundle-full.mjs",
+                    "shikiji/bundle/web": "./node_modules/shikiji/dist/bundle-web.mjs",
+                    "shikiji-core": "./node_modules/shikiji-core/dist/index.mjs",
+                    "shikiji-core/wasm": "./node_modules/shikiji-core/dist/wasm.mjs",
+                    "shikiji-core/textmate": "./node_modules/shikiji-core/dist/textmate.mjs",
+                    "shikiji-core/types": "./node_modules/shikiji-core/dist/types.d.mts"
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div id="root">Loading</div>
+        <script type="module" src="/index.js"></script>
+    </body>
+</html>

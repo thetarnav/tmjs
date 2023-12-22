@@ -1,0 +1,580 @@
+{
+	"comment": "Modification of https://github.com/fivemoreminix/odin-vscode",
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Odin",
+	"patterns": [{ "include": "#statements" }],
+	"repository": {
+		"statements": {
+			"patterns": [
+				{ "include": "#comments" },
+				{ "include": "#declarations" },
+				{ "include": "#block-declaration" },
+				{ "include": "#keywords" },
+				{ "include": "#types" },
+				{ "include": "#procedure-calls" },
+				{ "include": "#property-access" },
+				{ "include": "#strings" },
+				{ "include": "#punctuation" },
+				{ "include": "#variables" }
+			]
+		},
+		"declarations": {
+			"patterns": [
+				{
+					"begin": "\\b([A-Za-z_]\\w*)\\s*(:)\\s*(:|=)\\s*(#type)?\\s*(?=\\bproc\\b)",
+					"beginCaptures": {
+						"1": {
+							"name": "meta.definition.function.odin entity.name.function.odin"
+						},
+						"2": { "name": "keyword.operator.assignment.odin" },
+						"3": { "name": "keyword.operator.assignment.odin" },
+						"4": { "name": "keyword.other.odin" }
+					},
+					"end": "(?=^)|(?<=\\})",
+					"patterns": [{ "include": "#procedure-declaration" }]
+				},
+				{ "include": "#procedure-declaration" },
+				{
+					"captures": {
+						"1": { "name": "entity.name.type.odin" },
+						"2": { "name": "keyword.operator.assignment.odin" },
+						"3": { "name": "keyword.operator.assignment.odin" },
+						"4": { "name": "storage.type.odin" }
+					},
+					"match": "\\b([A-Za-z_]\\w*)\\s*(:)\\s*(:)\\s*(struct|union|enum|bit_set)"
+				}
+			]
+		},
+		"block-declaration": {
+			"name": "meta.block.odin",
+			"begin": "\\{",
+			"beginCaptures": {
+				"0": { "name": "punctuation.definition.block.odin" }
+			},
+			"end": "\\}",
+			"endCaptures": {
+				"0": { "name": "punctuation.definition.block.odin" }
+			},
+			"patterns": [{ "include": "#statements" }]
+		},
+		"procedure-calls": {
+			"patterns": [
+				{
+					"captures": {
+						"1": { "name": "support.function.builtin.odin" },
+						"2": { "name": "punctuation.odin" }
+					},
+					"match": "(?<!\\.)\\b(len|cap|size_of|align_of|offset_of_selector|offset_of_member|offset_of|offset_of_by_string|type_of|type_info_of|typeid_of|swizzle|complex|quaternion|real|imag|jmag|kmag|conj|expand_values|min|max|abs|clamp|soa_zip|soa_unzip|make|resize|reserve|append|delete|assert|panic)\\b\\s*(\\()"
+				},
+				{
+					"captures": {
+						"1": { "name": "entity.name.function.odin" },
+						"2": { "name": "punctuation.odin" }
+					},
+					"match": "([A-Za-z_]\\w*)\\s*[!]?\\s*([\\(])"
+				}
+			]
+		},
+		"procedure-declaration": {
+			"name": "meta.function.odin",
+			"begin": "\\b(proc)\\b",
+			"beginCaptures": { "1": { "name": "storage.type.function.odin" } },
+			"end": "(?=^|\\)|,|;)|(?<=})",
+			"patterns": [
+				{ "include": "#strings" },
+				{ "include": "#comments" },
+				{ "include": "#procedure-parameters" },
+				{ "include": "#procedure-return-type" },
+				{ "include": "#where-clause" },
+				{ "include": "#block-declaration" }
+			]
+		},
+		"procedure-parameters": {
+			"name": "meta.parameters.odin",
+			"begin": "\\(",
+			"beginCaptures": {
+				"0": { "name": "punctuation.definition.parameters.begin.odin" }
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": { "name": "punctuation.definition.parameters.end.odin" }
+			},
+			"patterns": [
+				{ "include": "#comments" },
+				{ "include": "#parameter-assignment" },
+				{ "include": "#type-annotation" },
+				{ "include": "#keywords" },
+				{ "include": "#basic-types" },
+				{ "include": "#property-access" },
+				{
+					"name": "variable.parameter.odin",
+					"match": "\\b[A-Za-z_]\\w*\\b"
+				},
+				{ "include": "#parameter-separator" }
+			]
+		},
+		"procedure-return-type": {
+			"name": "meta.return.type.odin",
+			"begin": "->",
+			"beginCaptures": {
+				"0": { "name": "storage.type.function.arrow.odin" }
+			},
+			"end": "(?=^|\\)|,|;|{|where)",
+			"patterns": [
+				{ "include": "#comments" },
+				{ "include": "#keywords" },
+				{ "include": "#basic-types" },
+				{ "include": "#property-access" },
+				{
+					"name": "meta.parameters.odin",
+					"begin": "\\(",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.parameters.begin.odin"
+						}
+					},
+					"applyEndPatternLast": 0,
+					"end": "\\)",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.parameters.end.odin"
+						}
+					},
+					"patterns": [
+						{ "include": "#comments" },
+						{ "include": "#parameter-assignment" },
+						{ "include": "#type-annotation" },
+						{ "include": "#keywords" },
+						{ "include": "#basic-types" },
+						{ "include": "#property-access" },
+						{
+							"name": "variable.name.odin",
+							"match": "\\b[A-Za-z_]\\w*\\b"
+						},
+						{ "include": "#parameter-separator" }
+					]
+				},
+				{
+					"name": "entity.name.type.odin",
+					"match": "\\b[A-Za-z_]\\w*\\b"
+				}
+			]
+		},
+		"parameter-assignment": {
+			"begin": ":?=",
+			"beginCaptures": {
+				"0": {
+					"name": "keyword.operator.assignment.odin"
+				}
+			},
+			"end": "(?=,|\\))",
+			"patterns": [
+				{ "include": "#comments" },
+				{ "include": "#keywords" },
+				{ "include": "#property-access" },
+				{ "include": "#strings" },
+				{ "include": "#punctuation" },
+				{ "include": "#variables" }
+			]
+		},
+		"where-clause": {
+			"name": "meta.where.clause.odin",
+			"begin": "\\bwhere\\b",
+			"beginCaptures": {
+				"0": { "name": "keyword.other.where.odin" }
+			},
+			"end": "(?={)",
+			"patterns": [
+				{ "include": "#comments" },
+				{ "include": "#keywords" },
+				{ "include": "#types" },
+				{ "include": "#property-access" },
+				{ "include": "#procedure-calls" },
+				{ "include": "#strings" },
+				{ "include": "#parameter-separator" },
+				{ "include": "#punctuation" },
+				{ "include": "#variables" }
+			]
+		},
+		"parameter-separator": {
+			"name": "punctuation.separator.parameter.odin",
+			"match": ","
+		},
+		"type-annotation": {
+			"name": "meta.type.annotation.odin",
+			"begin": ":",
+			"beginCaptures": {
+				"0": { "name": "keyword.operator.type.annotation.odin" }
+			},
+			"end": "(?=,|\\)|\\s*=)",
+			"patterns": [
+				{ "include": "#comments" },
+				{ "include": "#procedure-declaration" },
+				{ "include": "#keywords" },
+				{ "include": "#basic-types" },
+				{
+					"begin": "\\b([A-Za-z_]\\w*)\\b\\s*\\(()\\s*",
+					"beginCaptures": {
+						"1": { "name": "entity.name.type.odin" },
+						"2": {
+							"name": "punctuation.definition.typeparameters.begin.odin"
+						}
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.typeparameters.end.odin"
+						}
+					},
+					"patterns": [
+						{ "include": "#comments" },
+						{ "include": "#keywords" },
+						{ "include": "#basic-types" },
+						{ "include": "#property-access" },
+						{
+							"name": "entity.name.type.parameter.odin",
+							"match": "\\b[A-Za-z_]\\w*\\b"
+						},
+						{ "include": "#parameter-separator" }
+					]
+				},
+				{ "include": "#property-access" },
+				{
+					"name": "entity.name.type.odin",
+					"match": "\\b[A-Za-z_]\\w*\\b"
+				}
+			]
+		},
+		"property-access": {
+			"captures": {
+				"1": { "name": "variable.other.object.odin" },
+				"2": { "name": "punctuation.accessor.odin" }
+			},
+			"match": "([A-Za-z_]\\w*)\\s*(\\.)(?=\\s*[A-Za-z_]\\w*)"
+		},
+		"identifier": {
+			"patterns": [
+				{
+					"match": "\\b[[:alpha:]_][[:alnum:]_]*\\b"
+				}
+			]
+		},
+		"type-chars": {
+			"patterns": [
+				{
+					"match": "[[:alnum:]\\s,._^<>\\[\\]-]"
+				}
+			]
+		},
+		"screaming-identifier": {
+			"patterns": [
+				{
+					"match": "\\b[A-Z_](?![a-z])[A-Z_0-9]+\\b"
+				}
+			]
+		},
+		"block-comment": {
+			"patterns": [
+				{
+					"name": "comment.block.odin",
+					"begin": "/\\*",
+					"end": "\\*/",
+					"patterns": [{ "include": "#block-comment" }]
+				}
+			]
+		},
+		"comments": {
+			"patterns": [
+				{ "include": "#block-comment" },
+				{
+					"name": "comment.line.double-slash.odin",
+					"begin": "//",
+					"end": "\n"
+				}
+			]
+		},
+		"variables": {
+			"patterns": [
+				{
+					"name": "variable.name.odin",
+					"match": "\\b([A-Za-z_]\\w*)\\b"
+				}
+			]
+		},
+		"keywords": {
+			"patterns": [
+				{
+					"name": "keyword.tag.odin",
+					"comment": "Use #name to use a pattern",
+					"match": "\\b([#@]\\s*[A-Za-z_]\\w*)\\b"
+				},
+				{
+					"name": "keyword.control.odin",
+					"match": "\\b(import|foreign|package)\\b"
+				},
+				{
+					"name": "keyword.control.odin",
+					"match": "\\b(if|else|or_else|when|where|for|in|not_in|defer|switch|return|or_return)\\b"
+				},
+				{
+					"name": "keyword.control.odin",
+					"match": "\\b(fallthrough|break|or_break|continue|or_continue|case|dynamic)\\b"
+				},
+				{
+					"name": "keyword.control.odin",
+					"match": "\\b(do|force_inline|no_inline)\\b"
+				},
+				{
+					"name": "keyword.control.odin",
+					"match": "\\b(asm)\\b"
+				},
+				{
+					"name": "variable.other.object.odin",
+					"match": "\\b(context)\\b"
+				},
+				{
+					"name": "storage.modifier.odin",
+					"match": "\\b(distinct|using)\\b"
+				},
+				{
+					"name": "constant.language.odin",
+					"match": "\\b(nil|true|false)\\b"
+				},
+				{
+					"name": "constant.numeric.odin",
+					"match": "\\b(\\d(\\d|_)*(.\\d(\\d|_)*)?)((e|E)(\\+|-)?\\d+)?[ijk]?\\b"
+				},
+				{
+					"name": "constant.numeric.odin",
+					"match": "\\b((0b(0|1|_)+)|(0o(\\d|_)+)|(0d(\\d|_)+)|(0[xXh](\\h|_)+))[i]?\\b"
+				},
+				{
+					"name": "constant.numeric.odin",
+					"match": "---"
+				},
+				{
+					"name": "storage.type.odin",
+					"match": "\\b(struct|enum|union|map|bit_set|typeid|matrix)\\b"
+				},
+				{
+					"name": "keyword.function.odin",
+					"match": "\\b(cast|transmute|auto_cast)\\b"
+				},
+				{
+					"name": "keyword.operator.assignment.compound",
+					"match": "[+\\-*/%]=|%%="
+				},
+				{
+					"name": "keyword.operator.assignment.compound.bitwise",
+					"match": "\\|=|~=|&~?=|<<=|>>="
+				},
+				{
+					"name": "keyword.operator.comparison",
+					"match": "==|!="
+				},
+				{
+					"name": "keyword.operator.relational",
+					"match": "[<>]=?"
+				},
+				{
+					"name": "keyword.operator.assignment.odin",
+					"match": ":[:=]|="
+				},
+				{
+					"name": "keyword.operator.address.odin",
+					"match": "\\&"
+				},
+				{
+					"name": "keyword.operator.address.odin",
+					"match": "\\^"
+				},
+				{
+					"match": "->",
+					"name": "storage.type.function.arrow.odin"
+				},
+				{
+					"name": "keyword.operator.odin",
+					"match": "@|(\\||\\!|:|\\+|-\\>?|\\*|/|\\<\\<?|\\>\\>?|\\~)=?|=|::?|\\.\\."
+				},
+				{
+					"name": "keyword.other.odin",
+					"match": "#[A-Za-z_][A-Za-z_0-9]*"
+				}
+			]
+		},
+		"types": {
+			"patterns": [
+				{
+					"captures": {
+						"1": { "name": "storage.type.odin" },
+						"2": { "name": "meta.block.odin" },
+						"3": { "name": "meta.block.odin" }
+					},
+					"match": "\\b(struct|enum|union|bit_set)\\b(?:(\\{)(\\}))?"
+				},
+				{
+					"name": "storage.type.function.odin",
+					"match": "\\bproc\\b"
+				},
+				{
+					"name": "meta.brackets.odin",
+					"captures": {
+						"1": {
+							"name": "punctuation.definition.brackets.begin.odin"
+						},
+						"2": {
+							"name": "constant.numeric.odin"
+						},
+						"3": {
+							"name": "punctuation.definition.brackets.end.odin"
+						}
+					},
+					"match": "(\\[)(\\d*)(\\])(?=[[:alpha:]_])"
+				},
+				{
+					"name": "storage.type.odin",
+					"match": "\\$\\s*({{identifier}})"
+				},
+				{
+					"include": "#basic-types"
+				}
+			]
+		},
+		"basic-types": {
+			"patterns": [
+				{
+					"name": "support.type.primitive.odin",
+					"match": "\\b(i8|i16|i32|i64|i128|int)\\b"
+				},
+				{
+					"name": "support.type.primitive.odin",
+					"match": "\\b(u8|u16|u32|u64|u128|uint|uintptr)\\b"
+				},
+				{
+					"name": "support.type.primitive.odin",
+					"match": "\\b(u16le|u32le|u64le|u128le|i16le|i32le|i64le|i128le)\\b"
+				},
+				{
+					"name": "support.type.primitive.odin",
+					"match": "\\b(i16be|i32be|i64be|i128be|u16be|u32be|u64be|u128be)\\b"
+				},
+				{
+					"name": "support.type.primitive.odin",
+					"match": "\\b(f16|f32|f64)\\b"
+				},
+				{
+					"name": "support.type.primitive.odin",
+					"match": "\\b(f16le|f32le|f64le)\\b"
+				},
+				{
+					"name": "support.type.primitive.odin",
+					"match": "\\b(f16be|f32be|f64be)\\b"
+				},
+				{
+					"name": "support.type.primitive.odin",
+					"match": "\\b(complex32|complex64|complex128)\\b"
+				},
+				{
+					"name": "support.type.primitive.odin",
+					"match": "\\b(quaternion64|quaternion128|quaternion256)\\b"
+				},
+				{
+					"name": "support.type.primitive.odin",
+					"match": "\\b(bool|b8|b16|b32|b64)\\b"
+				},
+				{
+					"name": "support.type.primitive.odin",
+					"match": "\\b(string|cstring|rune)\\b"
+				},
+				{
+					"name": "support.type.primitive.odin",
+					"match": "\\b(rawptr)\\b"
+				},
+				{
+					"name": "support.type.primitive.odin",
+					"match": "\\b(any|typeid)\\b"
+				},
+				{
+					"name": "support.type.primitive.odin",
+					"match": "\\b(byte)\\b"
+				}
+			]
+		},
+		"strings": {
+			"patterns": [
+				{ "include": "#strings-quoted-double" },
+				{ "include": "#strings-quoted-single" },
+				{ "include": "#strings-quoted-raw" }
+			]
+		},
+		"strings-quoted-double": {
+			"name": "string.quoted.double.odin",
+			"begin": "\"",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.begin.odin"
+				}
+			},
+			"end": "\"",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.end.odin"
+				}
+			},
+			"patterns": [{ "include": "#string-escaped-char" }]
+		},
+		"strings-quoted-single": {
+			"name": "string.quoted.single.odin",
+			"begin": "'",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.begin.odin"
+				}
+			},
+			"end": "'",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.end.odin"
+				}
+			},
+			"patterns": [{ "include": "#string-escaped-char" }]
+		},
+		"strings-quoted-raw": {
+			"name": "string.quoted.raw.odin",
+			"begin": "`",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.begin.odin"
+				}
+			},
+			"end": "`",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.end.odin"
+				}
+			},
+			"patterns": [{ "include": "#string-escaped-char" }]
+		},
+		"string-escaped-char": {
+			"patterns": [
+				{
+					"name": "constant.character.escape.odin",
+					"match": "\\\\(\\\\|[abfnrutv''\"]|x\\h{2}|u\\h{4}|U\\h{8}|[0-7]{3})"
+				},
+				{
+					"name": "invalid.illegal.unknown-escape.odin",
+					"match": "\\\\."
+				}
+			]
+		},
+		"punctuation": {
+			"patterns": [
+				{
+					"name": "punctuation.odin",
+					"match": "\\(|\\)|\\{|\\}|;|\\[|\\]|\\.|,"
+				}
+			]
+		}
+	},
+	"scopeName": "source.odin"
+}
