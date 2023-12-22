@@ -69,9 +69,36 @@ h6 {
 STYLES
 */
 
+@font-face {
+	font-family: 'Monaspace Argon';
+	src: url('/fonts/MonaspaceArgon-Regular.otf') format('otf');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'Monaspace Argon';
+	src: url('/fonts/MonaspaceArgon-Bold.otf') format('otf');
+	font-weight: bold;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'Monaspace Argon';
+	src: url('/fonts/MonaspaceArgon-Italic.otf') format('otf');
+	font-weight: normal;
+	font-style: italic;
+}
+
 body {
 	background-color: #181717;
 	color: #fafafa;
+}
+
+body,
+pre,
+code {
+	font-family: 'Monaspace Argon', monospace;
 }
 
 .shiki {
