@@ -50,6 +50,10 @@ const update = async () => {
 		theme: theme.name,
 	})
 	root.innerHTML = html
+
+	const scroll_str = sessionStorage.getItem('scroll_position')
+	const scroll = scroll_str ? parseInt(scroll_str) : 0
+	window.scrollTo(0, scroll)
 }
 
 update()
@@ -59,4 +63,10 @@ window.addEventListener('keydown', e => {
 		e.preventDefault()
 		update()
 	}
+})
+
+window.addEventListener('beforeunload', () => {
+	const scroll = window.scrollY || document.documentElement.scrollTop
+	const str = scroll.toString()
+	sessionStorage.setItem('scroll_position', str)
 })
