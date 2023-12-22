@@ -1,11 +1,10 @@
 {
     "compilerOptions": {
-        "composite": true,
         "target": "ESNext",
         "module": "NodeNext",
         "moduleResolution": "NodeNext",
-        "lib": ["ESNext"],
-        "types": ["node"],
+        "lib": ["ESNext", "DOM"],
+        "types": [],
         "allowJs": true,
         "checkJs": true,
         "skipLibCheck": true,
