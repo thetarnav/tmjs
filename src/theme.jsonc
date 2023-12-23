@@ -303,7 +303,10 @@
 		},
 		{
 			"name": "Function call",
-			"scope": "meta.function-call entity.name.function",
+			"scope": [
+				"meta.function-call entity.name.function",
+				"meta.function-call support.function.builtin"
+			],
 			"settings": {"fontStyle": "bold"}
 		},
 		{

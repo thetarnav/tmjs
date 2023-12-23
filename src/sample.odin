@@ -111,6 +111,12 @@ the_basics :: proc() {
 	}
 }
 
+procedure_this_is_not :: 123
+procedure_this_is_not_indeed :: procedure_this_is_not
+
+union_this_is_not :: 123
+union_this_is_not_indeed :: union_this_is_not
+
 control_flow :: proc() {
 	fmt.println("\n# control flow")
 	{ 	// Control flow

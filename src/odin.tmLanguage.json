@@ -8,7 +8,10 @@
 			"patterns": [
 				{ "include": "#comments" },
 				{ "include": "#strings" },
-				{ "include": "#declarations" },
+				{ "include": "#procedure-assignment" },
+				{ "include": "#type-assignment" },
+				{ "include": "#distinct-type-assignment" },
+				{ "include": "#type-declaration" },
 				{ "include": "#block-declaration" },
 				{ "include": "#case-clause" },
 				{ "include": "#where-clause" },
@@ -20,33 +23,38 @@
 				{ "include": "#procedure-calls" },
 				{ "include": "#property-access" },
 				{ "include": "#punctuation" },
-				{ "include": "#variables" }
+				{ "include": "#variable-name" }
 			]
 		},
-		"declarations": {
-			"patterns": [
-				{
-					"begin": "\\b([A-Za-z_]\\w*)\\s*(:)\\s*(:|=)\\s*(#\\w+)?\\s*(?=\\bproc\\b)",
-					"beginCaptures": {
-						"1": { "name": "meta.definition.function.odin entity.name.function.odin" },
-						"2": { "name": "keyword.operator.assignment.odin" },
-						"3": { "name": "keyword.operator.assignment.odin" },
-						"4": { "name": "keyword.other.odin" }
-					},
-					"end": "(?=^)|(?<=\\})",
-					"patterns": [ { "include": "#procedure-declaration" } ]
-				},
-				{ "include": "#procedure-declaration" },
-				{
-					"match": "\\b([A-Za-z_]\\w*)\\s*(:)\\s*(:)\\s*(distinct|struct|union|enum|bit_set)",
-					"captures": {
-						"1": { "name": "entity.name.type.odin" },
-						"2": { "name": "keyword.operator.assignment.odin" },
-						"3": { "name": "keyword.operator.assignment.odin" },
-						"4": { "name": "storage.type.odin" }
-					}
-				}
-			]
+		"procedure-assignment": {
+			"begin": "\\b([A-Za-z_]\\w*)\\s*(:\\s*:|=)\\s*(#\\w+)?\\s*(?=proc\\b)",
+			"beginCaptures": {
+				"1": { "name": "meta.definition.function.odin entity.name.function.odin" },
+				"2": { "name": "keyword.operator.assignment.odin" },
+				"3": { "name": "keyword.other.odin" }
+			},
+			"end": "(?=^)|(?<=\\})",
+			"patterns": [ { "include": "#type-declaration" } ]
+		},
+		"distinct-type-assignment": {
+			"begin": "\\b([A-Za-z_]\\w*)\\s*(:\\s*:)\\s*(?=(distinct)\\b)",
+			"beginCaptures": {
+				"1": { "name": "entity.name.type.odin" },
+				"2": { "name": "keyword.operator.assignment.odin" },
+				"3": { "name": "storage.type.odin" }
+			},
+			"end": "(?=^)|(?<=\\})",
+			"patterns": [ { "include": "#type-alias" } ]
+		},
+		"type-assignment": {
+			"begin": "\\b([A-Za-z_]\\w*)\\s*(:\\s*:)\\s*(?=(struct|union|enum|bit_set)\\b)",
+			"beginCaptures": {
+				"1": { "name": "entity.name.type.odin" },
+				"2": { "name": "keyword.operator.assignment.odin" },
+				"3": { "name": "storage.type.odin" }
+			},
+			"end": "(?=^)|(?<=\\})",
+			"patterns": [ { "include": "#type-declaration" } ]
 		},
 		"block-declaration": {
 			"name": "meta.block.odin",
@@ -56,39 +64,18 @@
 			"endCaptures": { "0": { "name": "punctuation.definition.block.odin" } },
 			"patterns": [ { "include": "#statements" } ]
 		},
-		"procedure-calls": {
-			"patterns": [
-				{
-					"match": "(?<!\\.)\\b(len|cap|size_of|align_of|offset_of_selector|offset_of_member|offset_of|offset_of_by_string|type_of|type_info_of|typeid_of|swizzle|complex|quaternion|real|imag|jmag|kmag|conj|expand_values|min|max|abs|clamp|soa_zip|soa_unzip|make|resize|reserve|append|delete|assert|panic)\\b\\s*(\\()",
-					"captures": {
-						"1": { "name": "support.function.builtin.odin" },
-						"2": { "name": "punctuation.odin" }
-					}
-				},
-				{
-					"name": "meta.function-call.odin",
-					"begin": "([A-Za-z_]\\w*)\\s*[!]?\\s*([\\(])",
-					"beginCaptures": {
-						"1": { "name": "entity.name.function.odin" },
-						"2": { "name": "punctuation.odin" }
-					},
-					"end": "(?=\\))",
-					"endCaptures": { "0": { "name": "punctuation.odin" } },
-					"patterns": [ { "include": "#statements" } ]
-				}
-			]
-		},
-		"procedure-declaration": {
+		"type-declaration": {
 			"name": "meta.function.odin",
-			"begin": "\\b(proc)\\b",
+			"begin": "\\b(proc|struct|union|enum|bit_set)\\b",
 			"beginCaptures": { "1": { "name": "storage.type.function.odin" } },
 			"end": "(?=^|\\)|,|;)|(?<=})",
 			"patterns": [
 				{ "include": "#strings" },
 				{ "include": "#comments" },
-				{ "include": "#procedure-parameters" },
-				{ "include": "#procedure-return-type" },
+				{ "include": "#parameters" },
+				{ "include": "#return-type-declaration" },
 				{ "include": "#where-clause" },
+				{ "include": "#keywords" },
 				{ "include": "#block-declaration" },
 				{
 					"name": "constant.language.odin",
@@ -96,7 +83,7 @@
 				}
 			]
 		},
-		"procedure-parameters": {
+		"parameters": {
 			"name": "meta.parameters.odin",
 			"begin": "\\(",
 			"beginCaptures": { "0": { "name": "punctuation.definition.parameters.begin.odin" } },
@@ -106,18 +93,15 @@
 				{ "include": "#comments" },
 				{ "include": "#parameter-assignment" },
 				{ "include": "#type-annotation" },
-				{ "include": "#type-parameter" },
 				{ "include": "#keywords" },
+				{ "include": "#type-parameter" },
 				{ "include": "#basic-types" },
 				{ "include": "#property-access" },
-				{
-					"name": "variable.parameter.odin",
-					"match": "\\b[A-Za-z_]\\w*\\b"
-				},
-				{ "include": "#parameter-separator" }
+				{ "include": "#parameter-name" },
+				{ "include": "#punctuation" }
 			]
 		},
-		"procedure-return-type": {
+		"return-type-declaration": {
 			"name": "meta.return.type.odin",
 			"begin": "->",
 			"beginCaptures": { "0": { "name": "storage.type.function.arrow.odin" } },
@@ -141,11 +125,8 @@
 						{ "include": "#keywords" },
 						{ "include": "#basic-types" },
 						{ "include": "#property-access" },
-						{
-							"name": "variable.name.odin",
-							"match": "\\b[A-Za-z_]\\w*\\b"
-						},
-						{ "include": "#parameter-separator" }
+						{ "include": "#variable-name" },
+						{ "include": "#punctuation" }
 					]
 				},
 				{
@@ -164,30 +145,27 @@
 				{ "include": "#property-access" },
 				{ "include": "#strings" },
 				{ "include": "#punctuation" },
-				{ "include": "#variables" }
+				{ "include": "#variable-name" }
 			]
+		},
+		"procedure-calls": {
+			"name": "meta.function-call.odin",
+			"begin": "(?:(?<!\\.)\\b(len|cap|size_of|align_of|offset_of_selector|offset_of_member|offset_of|offset_of_by_string|type_of|type_info_of|typeid_of|swizzle|complex|quaternion|real|imag|jmag|kmag|conj|expand_values|min|max|abs|clamp|soa_zip|soa_unzip|make|resize|reserve|append|delete|assert|panic)\\b)|([A-Za-z_]\\w*)\\s*[!]?\\s*([\\(])",
+			"beginCaptures": {
+				"1": { "name": "support.function.builtin.odin" },
+				"2": { "name": "entity.name.function.odin" },
+				"3": { "name": "punctuation.odin" }
+			},
+			"end": "(?=\\))",
+			"endCaptures": { "0": { "name": "punctuation.odin" } },
+			"patterns": [ { "include": "#expressions" } ]
 		},
 		"where-clause": {
 			"name": "meta.where.clause.odin",
 			"begin": "\\bwhere\\b",
 			"beginCaptures": { "0": { "name": "keyword.other.where.odin" } },
 			"end": "(?={)",
-			"patterns": [
-				{ "include": "#comments" },
-				{ "include": "#keywords" },
-				{ "include": "#type-parameter" },
-				{ "include": "#basic-types" },
-				{ "include": "#property-access" },
-				{ "include": "#procedure-calls" },
-				{ "include": "#strings" },
-				{ "include": "#parameter-separator" },
-				{ "include": "#punctuation" },
-				{ "include": "#variables" }
-			]
-		},
-		"parameter-separator": {
-			"name": "punctuation.separator.parameter.odin",
-			"match": ","
+			"patterns": [ { "include": "#expressions" } ]
 		},
 		"case-clause": {
 			"name": "case-clause.expr.odin",
@@ -195,6 +173,9 @@
 			"beginCaptures": { "0": { "name": "keyword.control.case.odin" } },
 			"end": ":",
 			"endCaptures": { "0": { "name": "punctuation.definition.section.case-statement.odin" } },
+			"patterns": [ { "include": "#expressions" } ]
+		},
+		"expressions": {
 			"patterns": [
 				{ "include": "#comments" },
 				{ "include": "#slice" },
@@ -205,7 +186,7 @@
 				{ "include": "#property-access" },
 				{ "include": "#strings" },
 				{ "include": "#punctuation" },
-				{ "include": "#variables" }
+				{ "include": "#variable-name" }
 			]
 		},
 		"type-annotation": {
@@ -213,13 +194,23 @@
 			"begin": ":\\s*(?!=|:)",
 			"beginCaptures": { "0": { "name": "keyword.operator.type.annotation.odin" } },
 			"end": "(?=^|,|;|\\)|=|:)",
+			"patterns": [ { "include": "#type-alias" } ]
+		},
+		"type-alias": {
 			"patterns": [
 				{ "include": "#comments" },
 				{ "include": "#strings" },
-				{ "include": "#procedure-declaration" },
+				{ "include": "#type-declaration" },
 				{ "include": "#block-declaration" },
 				{ "include": "#keywords" },
 				{ "include": "#basic-types" },
+				{
+					"begin": "\\[",
+					"beginCaptures": { "0": { "name": "punctuation.definition.bracket.square.odin" } },
+					"end": "\\]",
+					"endCaptures": { "0": { "name": "punctuation.definition.bracket.square.odin" } },
+					"patterns": [ { "include": "#type-alias" } ]
+				},
 				{
 					"begin": "\\(",
 					"beginCaptures": { "0": { "name": "punctuation.definition.typeparameters.begin.odin" } },
@@ -230,19 +221,13 @@
 						{ "include": "#keywords" },
 						{ "include": "#basic-types" },
 						{ "include": "#property-access" },
-						{
-							"name": "entity.name.type.parameter.odin",
-							"match": "\\b[A-Za-z_]\\w*\\b"
-						},
-						{ "include": "#parameter-separator" }
+						{ "include": "#type-name" },
+						{ "include": "#punctuation" }
 					]
 				},
-				{ "include": "#slice" },
 				{ "include": "#property-access" },
-				{
-					"name": "entity.name.type.odin",
-					"match": "\\b[A-Za-z_]\\w*\\b"
-				}
+				{ "include": "#type-name" },
+				{ "include": "#punctuation" }
 			]
 		},
 		"slice": {
@@ -259,7 +244,7 @@
 				{ "include": "#procedure-calls" },
 				{ "include": "#strings" },
 				{ "include": "#punctuation" },
-				{ "include": "#variables" }
+				{ "include": "#variable-name" }
 			]
 		},
 		"property-access": {
@@ -268,16 +253,6 @@
 				"2": { "name": "punctuation.accessor.odin" }
 			},
 			"match": "([A-Za-z_]\\w*)\\s*(\\.)(?=\\s*[A-Za-z_]\\w*)"
-		},
-		"block-comment": {
-			"patterns": [
-				{
-					"name": "comment.block.odin",
-					"begin": "/\\*",
-					"end": "\\*/",
-					"patterns": [ { "include": "#block-comment" } ]
-				}
-			]
 		},
 		"comments": {
 			"patterns": [
@@ -289,11 +264,44 @@
 				}
 			]
 		},
-		"variables": {
+		"block-comment": {
+			"patterns": [
+				{
+					"name": "comment.block.odin",
+					"begin": "/\\*",
+					"end": "\\*/",
+					"patterns": [ { "include": "#block-comment" } ]
+				}
+			]
+		},
+		"type-name": {
+			"patterns": [
+				{
+					"name": "entity.name.type.odin",
+					"match": "\\b[A-Za-z_]\\w*\\b"
+				}
+			]
+		},
+		"type-parameter": {
+			"captures": {
+				"1": { "name": "keyword.operator.odin" },
+				"2": { "name": "entity.name.type.parameter.odin" }
+			},
+			"match": "(\\$)\\s*(\\b[A-Za-z_]\\w*\\b)"
+		},
+		"variable-name": {
 			"patterns": [
 				{
 					"name": "variable.name.odin",
-					"match": "\\b([A-Za-z_]\\w*)\\b"
+					"match": "\\b[A-Za-z_]\\w*\\b"
+				}
+			]
+		},
+		"parameter-name": {
+			"patterns": [
+				{
+					"name": "variable.parameter.odin",
+					"match": "\\b[A-Za-z_]\\w*\\b"
 				}
 			]
 		},
@@ -342,7 +350,7 @@
 				},
 				{
 					"name": "constant.numeric.odin",
-					"match": "\\b(\\d(\\d|_)*(.\\d(\\d|_)*)?)((e|E)(\\+|-)?\\d+)?[ijk]?\\b"
+					"match": "\\b(\\d(\\d|_)*(\\.\\d(\\d|_)*)?)((e|E)(\\+|-)?\\d+)?[ijk]?\\b"
 				},
 				{
 					"name": "constant.numeric.odin",
@@ -401,13 +409,6 @@
 					"match": "#[A-Za-z_]\\w*"
 				}
 			]
-		},
-		"type-parameter": {
-			"captures": {
-				"1": { "name": "keyword.operator.odin" },
-				"2": { "name": "entity.name.type.parameter.odin" }
-			},
-			"match": "(\\$)\\s*(\\b[A-Za-z_]\\w*\\b)"
 		},
 		"basic-types": {
 			"patterns": [
