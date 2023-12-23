@@ -57,37 +57,51 @@ const tokens_lines = highlighter.codeToThemedTokens(code, {
 })
 /** @type {HTMLElement[]} */
 const elements_lines = new Array(tokens_lines.length)
+/** @type {Map<HTMLElement, string>} */
+const scopes_map = new Map()
 
 for (let i = 0; i < tokens_lines.length; i += 1) {
 	const tokens = tokens_lines[i]
 	/** @type {HTMLElement[]} */
-	const elements = []
+	const elements = new Array(tokens.length)
 
-	for (const token of tokens) {
+	for (let j = 0; j < tokens.length; j += 1) {
+		const token = tokens[j]
 		if (!token.explanation) continue
 
-		for (const explanation of token.explanation) {
-			const el = document.createElement('span')
-			el.className = 'token'
-			elements.push(el)
+		const token_el = document.createElement('span')
+		token_el.className = 'token'
+		elements[j] = token_el
 
-			el.style.color = token.color || ''
-			el.textContent = explanation.content
+		for (const explanation of token.explanation) {
+			const scope_el = document.createElement('span')
+			scope_el.className = 'scope'
+			token_el.append(scope_el)
+
+			scope_el.style.color = token.color || ''
+			scope_el.textContent = explanation.content
 			switch (token.fontStyle) {
 				case 1:
-					el.style.fontStyle = 'italic'
+					scope_el.style.fontStyle = 'italic'
 					break
 				case 2:
-					el.style.fontWeight = 'bold'
+					scope_el.style.fontWeight = 'bold'
 					break
 			}
 
-			const last_scope = explanation.scopes[explanation.scopes.length - 1]
-			let name = last_scope.scopeName
-			if (name.endsWith('.odin')) {
-				name = name.slice(0, -5)
+			/*
+			Skip first because it's always the root scope
+			*/
+			let scope = ''
+			for (let i = 1; i < explanation.scopes.length; i += 1) {
+				let name = explanation.scopes[i].scopeName
+				if (name.endsWith('.odin')) {
+					name = name.slice(0, -5)
+				}
+				scope += name + '\n'
 			}
-			el.dataset['scope'] = name
+
+			scopes_map.set(scope_el, scope)
 		}
 	}
 
@@ -106,27 +120,34 @@ root.append(shiki_el)
 /*
 Show hovered token scope
 */
-const scope_el = document.createElement('div')
-scope_el.className = 'scope'
-document.body.append(scope_el)
+const tooltip_el = document.createElement('div')
+tooltip_el.className = 'scope-tooltip'
+document.body.append(tooltip_el)
 
+/** @type {HTMLElement | null} */
+let last_scope_el = null
 shiki_el.addEventListener('mousemove', e => {
 	const target = e.target
 	if (!(target instanceof HTMLElement)) {
-		scope_el.style.visibility = 'hidden'
+		tooltip_el.style.visibility = 'hidden'
+		last_scope_el = null
 		return
 	}
 
-	const scope = target.dataset['scope']
-	if (!scope) {
-		scope_el.style.visibility = 'hidden'
-		return
+	if (target !== last_scope_el) {
+		const scope = scopes_map.get(target)
+		if (!scope) {
+			tooltip_el.style.visibility = 'hidden'
+			last_scope_el = null
+			return
+		}
+
+		last_scope_el = target
+		tooltip_el.textContent = scope
+		tooltip_el.style.visibility = 'visible'
 	}
 
-	scope_el.style.visibility = 'visible'
-	scope_el.textContent = scope
-	scope_el.style.left = e.clientX + 'px'
-	scope_el.style.top = e.clientY + 'px'
+	tooltip_el.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`
 })
 
 /*
