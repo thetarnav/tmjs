@@ -1,7 +1,7 @@
 TODO:
 
--   [ ] labels
-    -   [ ] continue, break, or_continue, or_break label
+-   [x] labels
+    -   [x] continue, break, or_continue, or_break label
 -   [ ] unions
 -   [ ] enums
 -   [ ] enum members `.None`

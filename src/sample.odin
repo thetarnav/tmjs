@@ -2308,11 +2308,32 @@ or_break_and_or_continue_operators :: proc() {
 		break
 	}
 
-	continue_loop: for { 	// or_continue with named label
+	arr: [1]int
+	continue_loop: for i in arr { 	// or_continue with named label
 		x, y := caller_3() or_continue continue_loop
 		_, _ = x, y
 
 		break
+	}
+	foo: for  /*hello*/i in arr {
+	}
+
+	reversed: {
+		#reverse for i in arr { 	// or_continue with named label
+			x, y := caller_3() or_break reversed
+			_, _ = x, y
+
+			break
+		}
+	}
+
+	sw: switch arr {
+	case {2}:
+		break sw
+	}
+
+	iif: if arr == {2} {
+		break iif
 	}
 
 }
