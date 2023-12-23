@@ -288,7 +288,6 @@
 				"punctuation.definition.to-file.diff",
 				"keyword.operator.expression.import",
 				"entity.name.function",
-				"entity.name.function",
 				"meta.require",
 				"variable.function",
 				"keyword.other.special-method",
@@ -301,6 +300,11 @@
 			],
 			"settings": {"foreground": "#6e9ac4"}
 		},
+		// {
+		// 	"name": "Builtin functions",
+		// 	"scope": "support.function.builtin",
+		// 	"settings": {"foreground": "#6ebac4"}
+		// },
 		{
 			"name": "Function call",
 			"scope": [

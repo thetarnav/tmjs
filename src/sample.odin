@@ -51,21 +51,6 @@ the_basics :: proc() {
 		_ = len("Foo")
 		_ = len(some_string)
 
-
-		// Numbers
-
-		// Numerical literals are written similar to most other programming languages.
-		// A useful feature in Odin is that underscores are allowed for better
-		// readability: 1_000_000_000 (one billion). A number that contains a dot is a
-		// floating point literal: 1.0e9 (one billion). If a number literal is suffixed
-		// with i, is an imaginary number literal: 2i (2 multiply the square root of -1).
-
-		// Binary literals are prefixed with 0b, octal literals with 0o, and hexadecimal
-		// literals 0x. A leading zero does not produce an octal constant (unlike C).
-
-		// In Odin, if a numeric constant can be represented by a type without
-		// precision loss, it will automatically convert to that type.
-
 		x: int = 1.0 // A float literal but it can be represented by an integer without precision loss
 		// Constant literals are “untyped” which means that they can implicitly convert to a type.
 
@@ -74,10 +59,6 @@ the_basics :: proc() {
 
 		z: f64 // `z` is typed of type `f64` (64-bit floating point number)
 		z = 1 // `1` is an untyped integer literal which can be implicitly converted to `f64`
-		// No need for any suffixes or decimal places like in other languages
-		// (with the exception of negative zero, which must be given as `-0.0`)
-		// CONSTANTS JUST WORK!!!
-
 
 		// Assignment statements
 		h: int = 123 // declares a new variable `h` with type `int` and assigns a value to it
@@ -89,17 +70,6 @@ the_basics :: proc() {
 		a, b := 1, "hello" // declares `a` and `b` and infers the types from the assignments
 		b, a = "byte", 0
 
-		// Note: `:=` is two tokens, `:` and `=`. The following are equivalent,
-		/*
-			i: int = 123
-			i:     = 123
-			i := 123
-		*/
-
-		// Constant declarations
-		// Constants are entities (symbols) which have an assigned value.
-		// The constant’s value cannot be changed.
-		// The constant’s value must be able to be evaluated at compile time:
 		X :: "what" // constant `X` has the untyped string value "what"
 
 		// Constants can be explicitly typed like a variable declaration:
@@ -640,6 +610,7 @@ union_type :: proc() {
 			using entity: Entity,
 			is_robot:     bool,
 			is_zombie:    bool,
+			kill:         proc(frog: Frog) -> (ok: bool),
 		}
 
 		// See `parametric_polymorphism` procedure for details
@@ -1318,7 +1289,16 @@ implicit_selector_expression :: proc() {
 	f = Foo.A
 	f = .A
 
+	// const
 	BAR :: bit_set[Foo]{.B, .C}
+
+	// type
+	Baz :: bit_set[Foo]
+
+	// variable
+	random_struct :: struct {
+		a, b, c: int,
+	}{1, 2, 3}
 
 	switch f {
 	case .A:
