@@ -398,6 +398,7 @@ control_flow :: proc() {
 named_proc_return_parameters :: proc() {
 	fmt.println("\n# named proc return parameters")
 
+	Type :: int
 	foo0 :: proc() -> int {
 		return 123
 	}
@@ -405,11 +406,17 @@ named_proc_return_parameters :: proc() {
 		a = 123
 		return
 	}
-	foo2 :: proc() -> (a, b: int) {
+	foo2 :: proc() -> (a, b: Type, c, d: f32, e: int = 1) {
 		// Named return values act like variables within the scope
 		a = 321
 		b = 567
-		return b, a
+		return b, a, 3.14, 2.71, 3
+	}
+	foo3 :: proc() -> (a: int = 1, b := 2) {
+		return
+	}
+	foo4 :: proc() -> (Type, bool) {
+		return {}, {}
 	}
 	fmt.println("foo0 =", foo0()) // 123
 	fmt.println("foo1 =", foo1()) // 123
@@ -452,6 +459,11 @@ explicit_procedure_overloading :: proc() {
 		return x
 	}
 	add_numbers :: proc(a: int, b: f32, c: u8) -> int {
+		x := int(a) + int(b) + int(c)
+		fmt.println("add_numbers", x)
+		return x
+	}
+	add_numbers2 :: proc(a: int, b:  /*this too*/f32,  /*this one is cool*/c: u8) -> int {
 		x := int(a) + int(b) + int(c)
 		fmt.println("add_numbers", x)
 		return x
@@ -1289,16 +1301,29 @@ implicit_selector_expression :: proc() {
 	f = Foo.A
 	f = .A
 
-	// const
-	BAR :: bit_set[Foo]{.B, .C}
+	N :: 4
 
+	// const
+	BAZ :: bit_set[Foo]{.B, .C}
 	// type
 	Baz :: bit_set[Foo]
 
-	// variable
-	random_struct :: struct {
+	// type
+	Bar :: struct {
+		a, b, c: [N]int,
+	}
+	// const
+	BAR :: struct {
 		a, b, c: int,
 	}{1, 2, 3}
+
+
+	// type
+	Aaa :: proc(a, b, c: int)
+	// proc
+	aaa :: proc(a, b, c: int) {
+		fmt.println("Hellope")
+	}
 
 	switch f {
 	case .A:
