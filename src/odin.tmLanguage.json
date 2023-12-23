@@ -78,7 +78,7 @@
 		},
 		"constant-assignment": {
 			"name": "meta.definition.variable.odin",
-			"match": "(?:([A-Za-z_]\\w*)\\s*(,)\\s*)*([A-Za-z_]\\w*)\\s*(:\\s*:)",
+			"match": "(?:([A-Za-z_]\\w*)\\s*(,)\\s*)?([A-Za-z_]\\w*)\\s*(:\\s*:)",
 			"captures": {
 				"1": { "name": "variable.other.constant.odin" },
 				"2": { "name": "punctuation.odin" },
@@ -88,7 +88,7 @@
 		},
 		"variable-assignment": {
 			"name": "meta.definition.variable.odin",
-			"match": "(?:([A-Za-z_]\\w*)\\s*(,)\\s*)*([A-Za-z_]\\w*)\\s*(:\\s*=)",
+			"match": "(?:([A-Za-z_]\\w*)\\s*(,)\\s*)?([A-Za-z_]\\w*)\\s*(:\\s*=)",
 			"captures": {
 				"1": { "name": "variable.name.odin" },
 				"2": { "name": "punctuation.odin" },
@@ -98,7 +98,7 @@
 		},
 		"type-annotation": {
 			"name": "meta.type.annotation.odin",
-			"begin": "(?:([A-Za-z_]\\w*)\\s*(,)\\s*)*([A-Za-z_]\\w*)\\s*(:)",
+			"begin": "(?:([A-Za-z_]\\w*)\\s*(,)\\s*)?([A-Za-z_]\\w*)\\s*(:)",
 			"beginCaptures": {
 				"1": { "name": "variable.name.odin" },
 				"2": { "name": "punctuation.odin" },

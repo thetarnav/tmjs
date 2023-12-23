@@ -406,11 +406,11 @@ named_proc_return_parameters :: proc() {
 		a = 123
 		return
 	}
-	foo2 :: proc() -> (a, b: Type, c, d: f32, e: int = 1) {
+	foo2 :: proc() -> (a, b, c: Type, aa, bb: f32, aaa: int = 1) {
 		// Named return values act like variables within the scope
 		a = 321
 		b = 567
-		return b, a, 3.14, 2.71, 3
+		return b, a, 2, 3.14, 2.71, 3
 	}
 	foo3 :: proc() -> (a: int = 1, b := 2) {
 		return
