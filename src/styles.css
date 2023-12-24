@@ -122,7 +122,7 @@ code {
 	position: absolute;
 	z-index: -1;
 	pointer-events: none;
-	inset: -2px;
+	inset: -1px -2px;
 	background-color: rgba(255, 255, 255, 0.1);
 	border-radius: 4px;
 	opacity: 0;

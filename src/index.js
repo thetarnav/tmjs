@@ -1,10 +1,9 @@
 import * as shikiji from 'shikiji/core'
 import * as shikiji_wasm from 'shikiji/wasm'
 
-const SRC_PATH = 'src/'
-const THEME_PATH = SRC_PATH + 'theme.json'
-const LANG_PATH = SRC_PATH + 'odin.tmLanguage.json'
-const CODE_PATH = SRC_PATH + 'sample.odin'
+const THEME_PATH = 'theme.json'
+const LANG_PATH = 'odin.tmLanguage.json'
+const CODE_PATH = 'sample.odin'
 
 /**
  * @returns {Promise<string>}

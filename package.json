@@ -5,7 +5,7 @@
 	"private": true,
 	"license": "MIT",
 	"scripts": {
-		"dev": "pnpm dlx http-server ."
+		"dev": "node dev.js"
 	},
 	"dependencies": {
 		"shikiji": "^0.9.11",
