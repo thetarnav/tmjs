@@ -37,10 +37,10 @@
 				{ "include": "#comments" },
 				{ "include": "#map-bitset" },
 				{ "include": "#slice" },
+				{ "include": "#procedure-calls" },
 				{ "include": "#keywords" },
 				{ "include": "#type-parameter" },
 				{ "include": "#basic-types" },
-				{ "include": "#procedure-calls" },
 				{ "include": "#property-access" },
 				{ "include": "#strings" },
 				{ "include": "#punctuation" },
@@ -239,23 +239,59 @@
 			"patterns": [ { "include": "#expressions" } ]
 		},
 		"procedure-calls": {
-			"name": "meta.function-call.odin",
-			"begin": "(?:(\\blen|cap|size_of|align_of|offset_of_selector|offset_of_member|offset_of|offset_of_by_string|type_of|type_info_of|typeid_of|swizzle|complex|quaternion|real|imag|jmag|kmag|conj|expand_values|min|max|abs|clamp|soa_zip|soa_unzip|make|new|resize|reserve|append|delete|assert|panic\\b)|([A-Za-z_]\\w*))\\s*(\\()",
-			"beginCaptures": {
-				"1": { "name": "support.function.builtin.odin" },
-				"2": { "name": "entity.name.function.odin" },
-				"3": { "name": "punctuation.odin" }
-			},
-			"end": "(?=\\))",
-			"endCaptures": { "0": { "name": "punctuation.odin" } },
-			"patterns": [ { "include": "#expressions" } ]
+			"patterns": [
+				{
+					"name": "meta.function-call.odin",
+					"begin": "\\b(cast|transmute)\\b\\s*(\\()",
+					"beginCaptures": {
+						"1": { "name": "keyword.function.odin" },
+						"2": { "name": "meta.brace.round.odin" }
+					},
+					"end": "\\)",
+					"endCaptures": { "0": { "name": "meta.brace.round.odin" } },
+					"patterns": [ { "include": "#type-declaration" } ]
+				},
+				{
+					"name": "meta.function-call.odin",
+					"begin": "\\b(size_of|align_of)\\b\\s*(\\()",
+					"beginCaptures": {
+						"1": { "name": "support.function.builtin.odin" },
+						"2": { "name": "meta.brace.round.odin" }
+					},
+					"end": "\\)",
+					"endCaptures": { "0": { "name": "meta.brace.round.odin" } },
+					"patterns": [ { "include": "#type-declaration" } ]
+				},
+				{
+					"name": "meta.function-call.odin",
+					"begin": "\\b(len|cap|offset_of_selector|offset_of_member|offset_of|offset_of_by_string|type_of|type_info_of|typeid_of|swizzle|complex|quaternion|real|imag|jmag|kmag|conj|expand_values|min|max|abs|clamp|soa_zip|soa_unzip|make|new|resize|reserve|append|delete|assert|panic)\\b\\s*(\\()",
+					"beginCaptures": {
+						"1": { "name": "support.function.builtin.odin" },
+						"2": { "name": "meta.brace.round.odin" }
+					},
+					"end": "\\)",
+					"endCaptures": { "0": { "name": "meta.brace.round.odin" } },
+					"patterns": [ { "include": "#expressions" } ]
+				},
+				{
+					"name": "meta.function-call.odin",
+					"begin": "([A-Za-z_]\\w*)\\s*(\\()",
+					"beginCaptures": {
+						"1": { "name": "entity.name.function.odin" },
+						"2": { "name": "meta.brace.round.odin" }
+					},
+					"end": "\\)",
+					"endCaptures": { "0": { "name": "meta.brace.round.odin" } },
+					"patterns": [ { "include": "#expressions" } ]
+				}
+			]
 		},
 		"slice": {
 			"name": "meta.slice.odin",
 			"begin": "\\[",
-			"beginCaptures": { "0": { "name": "punctuation.definition.bracket.square.odin" } },
+			"beginCaptures": { "0": { "name": "meta.brace.square.odin" } },
 			"end": "\\]",
-			"endCaptures": { "0": { "name": "punctuation.definition.bracket.square.odin" } },
+			"endCaptures": { "0": { "name": "meta.brace.square.odin" } },
 			"patterns": [ { "include": "#expressions" } ]
 		},
 		"property-access": {
@@ -344,7 +380,7 @@
 				},
 				{
 					"name": "storage.modifier.odin",
-					"match": "\\b(distinct|using)\\b"
+					"match": "\\b(auto_cast|distinct|using)\\b"
 				},
 				{
 					"name": "variable.other.object.odin",
@@ -373,10 +409,6 @@
 				{
 					"name": "storage.type.odin",
 					"match": "\\b(struct|enum|union|map|bit_set|matrix)\\b"
-				},
-				{
-					"name": "keyword.function.odin",
-					"match": "\\b(cast|transmute|auto_cast)\\b"
 				},
 				{
 					"name": "keyword.operator.assignment.compound",

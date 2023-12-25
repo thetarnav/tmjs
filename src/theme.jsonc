@@ -299,9 +299,9 @@
 			"settings": {"foreground": "#6e9ac4"}
 		},
 		// {
-		// 	"name": "Builtin functions",
-		// 	"scope": "support.function.builtin",
-		// 	"settings": {"foreground": "#6ebac4"}
+		// 	"name": "Keyword functions",
+		// 	"scope": "keyword.function",
+		// 	"settings": {"foreground": "#8e66d1"}
 		// },
 		{
 			"name": "Function call",
@@ -322,7 +322,8 @@
 				"punctuation.separator.delimiter",
 				"punctuation.separator.list.comma.css",
 				"punctuation.separator.key-value",
-				"punctuation.separator.label"
+				"punctuation.separator.label",
+				"meta.brace"
 			],
 			"settings": {"foreground": "#b6aaadab"}
 		},

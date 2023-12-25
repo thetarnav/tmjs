@@ -25,7 +25,11 @@ TODO:
 },
 ```
 
--   [x] `make(map[Foo]int)` `Foo` should be a type
+-   [x] `map[Type]`
+-   [x] `bit_set[Type]`
+-   [x] `cast(Type)` `transmute(Type)`
+-   [ ] `[Foo]Bar`
+-   [ ] `^Type`
 -   [ ] `type :: struct {}` vs `var :: struct {}{}`
 -   [x] return value types `-> (int, Error)`
 -   [x] multi var parameters `a, b, c: int`
