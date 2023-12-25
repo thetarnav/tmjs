@@ -144,7 +144,7 @@
 				"entity.other.inherited-class",
 				"variable.other.constant",
 				"variable.language",
-				"variable.other.object",
+				// "variable.other.object",
 				"variable.other.enummember",
 				"variable.other.constant.property",
 				/*

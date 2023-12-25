@@ -1,3 +1,4 @@
+//+build js
 package sample
 
 import "core:fmt"
@@ -9,6 +10,15 @@ import "core:reflect"
 import "core:runtime"
 import "core:thread"
 import "core:time"
+
+foreign import "odin_env"
+
+@(default_calling_convention = "contextless")
+foreign odin_env {
+	trap :: proc() -> ! ---
+	alert :: proc(msg: string) ---
+	evaluate :: proc(str: string) ---
+}
 
 the_basics :: proc() {
 	fmt.println("\n# the basics")
@@ -415,9 +425,17 @@ named_proc_return_parameters :: proc() {
 	foo3 :: proc() -> (a: int = 1, b := 2) {
 		return
 	}
+
+	bar: uint
+
+	my_map :: map[Type]bool
+	My_Bit_Set :: bit_set[Type]
+	baz := cast(Type)bar
+
 	foo4 :: proc() -> (Type, bool) {
 		return {}, {}
 	}
+
 	fmt.println("foo0 =", foo0()) // 123
 	fmt.println("foo1 =", foo1()) // 123
 	fmt.println("foo2 =", foo2()) // 567 321
@@ -2296,9 +2314,12 @@ or_break_and_or_continue_operators :: proc() {
 		_ = n
 	}
 
-	loop: for { 	// or_break approach with named label
+	loop: for {
 		n := caller_2() or_break loop
 		_ = n
+	}
+	block: {
+		break block
 	}
 
 	for { 	// or_continue
