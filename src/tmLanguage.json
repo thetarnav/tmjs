@@ -2,7 +2,10 @@
 	"comment": "Modification of https://github.com/fivemoreminix/odin-vscode",
 	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
 	"name": "Odin",
-	"patterns": [ { "include": "#statements" } ],
+	"patterns": [
+		{ "include": "#package-name-declaration" },
+		{ "include": "#statements" }
+	],
 	"repository": {
 		"statements": {
 			"patterns": [
@@ -78,32 +81,34 @@
 		},
 		"constant-assignment": {
 			"name": "meta.definition.variable.odin",
-			"match": "(?:([A-Za-z_]\\w*)\\s*(,)\\s*)?([A-Za-z_]\\w*)\\s*(:\\s*:)",
+			"match": "([A-Za-z_]\\w*)\\s*(:\\s*:)",
 			"captures": {
 				"1": { "name": "variable.other.constant.odin" },
-				"2": { "name": "punctuation.odin" },
-				"3": { "name": "variable.other.constant.odin" },
-				"4": { "name": "keyword.operator.assignment.odin" }
+				"2": { "name": "keyword.operator.assignment.odin" }
 			}
 		},
 		"variable-assignment": {
 			"name": "meta.definition.variable.odin",
-			"match": "(?:([A-Za-z_]\\w*)\\s*(,)\\s*)?([A-Za-z_]\\w*)\\s*(:\\s*=)",
+			"match": "(?:([A-Za-z_]\\w*)\\s*(,)\\s*)?(?:([A-Za-z_]\\w*)\\s*(,)\\s*)?([A-Za-z_]\\w*)\\s*(:\\s*=)",
 			"captures": {
 				"1": { "name": "variable.name.odin" },
 				"2": { "name": "punctuation.odin" },
 				"3": { "name": "variable.name.odin" },
-				"4": { "name": "keyword.operator.assignment.odin" }
+				"4": { "name": "punctuation.odin" },
+				"5": { "name": "variable.name.odin" },
+				"6": { "name": "keyword.operator.assignment.odin" }
 			}
 		},
 		"type-annotation": {
 			"name": "meta.type.annotation.odin",
-			"begin": "(?:([A-Za-z_]\\w*)\\s*(,)\\s*)?([A-Za-z_]\\w*)\\s*(:)",
+			"begin": "(?:([A-Za-z_]\\w*)\\s*(,)\\s*)?(?:([A-Za-z_]\\w*)\\s*(,)\\s*)?([A-Za-z_]\\w*)\\s*(:)",
 			"beginCaptures": {
 				"1": { "name": "variable.name.odin" },
 				"2": { "name": "punctuation.odin" },
 				"3": { "name": "variable.name.odin" },
-				"4": { "name": "keyword.operator.type.annotation.odin" }
+				"4": { "name": "punctuation.odin" },
+				"5": { "name": "variable.name.odin" },
+				"6": { "name": "keyword.operator.type.annotation.odin" }
 			},
 			"end": "(?=^|,|;|\\)|=|:|for|switch|if|{)",
 			"patterns": [ { "include": "#type-declaration" } ]
@@ -229,6 +234,13 @@
 			"end": "(?=\\))",
 			"endCaptures": { "0": { "name": "punctuation.odin" } },
 			"patterns": [ { "include": "#expressions" } ]
+		},
+		"package-name-declaration": {
+			"match": "^\\s*(package)\\s+([A-Za-z_]\\w*)",
+			"captures": {
+				"1": { "name": "keyword.control.odin" },
+				"2": { "name": "entity.name.type.module.odin" }
+			}
 		},
 		"where-clause": {
 			"name": "meta.where.clause.odin",

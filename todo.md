@@ -9,5 +9,6 @@ TODO:
 -   [ ] type initialization
 -   [ ] `type :: struct {}` vs `var :: struct {}{}`
 -   [x] return value types `-> (int, Error)`
--   [ ] multi var parameters `a, b, c: int`
--   [ ] `package name`
+-   [x] multi var parameters `a, b, c: int`
+-   [x] `package name`
+-   [ ] `import "../path/to/package"`
