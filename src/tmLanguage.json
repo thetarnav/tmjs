@@ -18,8 +18,8 @@
 				{ "include": "#where-clause" },
 				{ "include": "#block-label" },
 				{ "include": "#type-annotation" },
-				{ "include": "#expressions" },
-				{ "include": "#block-declaration" }
+				{ "include": "#block-declaration" },
+				{ "include": "#expressions" }
 			]
 		},
 		"assignments": {
@@ -35,6 +35,7 @@
 		"expressions": {
 			"patterns": [
 				{ "include": "#comments" },
+				{ "include": "#map-bitset" },
 				{ "include": "#slice" },
 				{ "include": "#keywords" },
 				{ "include": "#type-parameter" },
@@ -132,22 +133,7 @@
 		"type-declaration": {
 			"name": "meta.type.declaration.odin",
 			"patterns": [
-				{
-					"begin": "\\b(bit_set|map)\\b",
-					"beginCaptures": { "1": { "name": "storage.type.odin" } },
-					"end": "(?=^|\\)|,|;)|(?<=})",
-					"patterns": [
-						{
-							"begin": "\\[",
-							"beginCaptures": { "0": { "name": "punctuation.definition.bracket.square.odin" } },
-							"end": "\\]",
-							"endCaptures": { "0": { "name": "punctuation.definition.bracket.square.odin" } },
-							"patterns": [ { "include": "#type-declaration" } ]
-						},
-						{ "include": "#where-clause" },
-						{ "include": "#type-declaration" }
-					]
-				},
+				{ "include": "#map-bitset" },
 				{
 					"begin": "\\b(proc|struct|union|enum)\\b",
 					"beginCaptures": { "1": { "name": "storage.type.odin" } },
@@ -164,13 +150,7 @@
 				{ "include": "#block-declaration" },
 				{ "include": "#keywords" },
 				{ "include": "#basic-types" },
-				{
-					"begin": "\\[",
-					"beginCaptures": { "0": { "name": "punctuation.definition.bracket.square.odin" } },
-					"end": "\\]",
-					"endCaptures": { "0": { "name": "punctuation.definition.bracket.square.odin" } },
-					"patterns": [ { "include": "#expressions" } ]
-				},
+				{ "include": "#slice" },
 				{
 					"begin": "\\(",
 					"beginCaptures": { "0": { "name": "punctuation.definition.typeparameters.begin.odin" } },
@@ -223,24 +203,25 @@
 				{ "include": "#type-name" }
 			]
 		},
-		"procedure-calls": {
-			"name": "meta.function-call.odin",
-			"begin": "(?:(\\blen|cap|size_of|align_of|offset_of_selector|offset_of_member|offset_of|offset_of_by_string|type_of|type_info_of|typeid_of|swizzle|complex|quaternion|real|imag|jmag|kmag|conj|expand_values|min|max|abs|clamp|soa_zip|soa_unzip|make|new|resize|reserve|append|delete|assert|panic\\b)|([A-Za-z_]\\w*))\\s*(\\()",
-			"beginCaptures": {
-				"1": { "name": "support.function.builtin.odin" },
-				"2": { "name": "entity.name.function.odin" },
-				"3": { "name": "punctuation.odin" }
-			},
-			"end": "(?=\\))",
-			"endCaptures": { "0": { "name": "punctuation.odin" } },
-			"patterns": [ { "include": "#expressions" } ]
-		},
 		"package-name-declaration": {
 			"match": "^\\s*(package)\\s+([A-Za-z_]\\w*)",
 			"captures": {
 				"1": { "name": "keyword.control.odin" },
 				"2": { "name": "entity.name.type.module.odin" }
 			}
+		},
+		"map-bitset": {
+			"begin": "\\b(bit_set|map)\\b",
+			"beginCaptures": { "0": { "name": "storage.type.odin" } },
+			"end": "]",
+			"endCaptures": { "0": { "name": "punctuation.definition.bracket.square.odin" } },
+			"patterns": [
+				{
+					"match": "\\[",
+					"name": "punctuation.definition.bracket.square.odin"
+				},
+				{ "include": "#type-declaration" }
+			]
 		},
 		"where-clause": {
 			"name": "meta.where.clause.odin",
@@ -257,22 +238,25 @@
 			"endCaptures": { "0": { "name": "punctuation.definition.section.case-statement.odin" } },
 			"patterns": [ { "include": "#expressions" } ]
 		},
+		"procedure-calls": {
+			"name": "meta.function-call.odin",
+			"begin": "(?:(\\blen|cap|size_of|align_of|offset_of_selector|offset_of_member|offset_of|offset_of_by_string|type_of|type_info_of|typeid_of|swizzle|complex|quaternion|real|imag|jmag|kmag|conj|expand_values|min|max|abs|clamp|soa_zip|soa_unzip|make|new|resize|reserve|append|delete|assert|panic\\b)|([A-Za-z_]\\w*))\\s*(\\()",
+			"beginCaptures": {
+				"1": { "name": "support.function.builtin.odin" },
+				"2": { "name": "entity.name.function.odin" },
+				"3": { "name": "punctuation.odin" }
+			},
+			"end": "(?=\\))",
+			"endCaptures": { "0": { "name": "punctuation.odin" } },
+			"patterns": [ { "include": "#expressions" } ]
+		},
 		"slice": {
 			"name": "meta.slice.odin",
 			"begin": "\\[",
 			"beginCaptures": { "0": { "name": "punctuation.definition.bracket.square.odin" } },
 			"end": "\\]",
 			"endCaptures": { "0": { "name": "punctuation.definition.bracket.square.odin" } },
-			"patterns": [
-				{ "include": "#comments" },
-				{ "include": "#keywords" },
-				{ "include": "#basic-types" },
-				{ "include": "#property-access" },
-				{ "include": "#procedure-calls" },
-				{ "include": "#strings" },
-				{ "include": "#punctuation" },
-				{ "include": "#variable-name" }
-			]
+			"patterns": [ { "include": "#expressions" } ]
 		},
 		"property-access": {
 			"captures": {

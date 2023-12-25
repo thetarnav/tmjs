@@ -2331,7 +2331,11 @@ or_break_and_or_continue_operators :: proc() {
 	case {2}:
 		break sw
 	}
-
+	e: Error
+	#partial sw2: switch e {
+	case .Something_Bad:
+		break sw2
+	}
 	iif: if arr == {2} {
 		break iif
 	}

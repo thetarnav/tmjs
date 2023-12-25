@@ -7,6 +7,25 @@ TODO:
 -   [ ] proc groups
 -   [ ] enum members `.None`
 -   [ ] type initialization
+
+```json
+"type-initialization": {
+    "name": "meta.type.initialization.odin",
+    "begin": "\\b([A-Za-z_]\\w*)\\s*({)",
+    "beginCaptures": {
+        "1": { "name": "entity.name.type.odin" },
+        "2": { "name": "punctuation.odin" }
+    },
+    "end": "}",
+    "endCaptures": { "0": { "name": "punctuation.odin" } },
+    "patterns": [
+        { "include": "#assignments" },
+        { "include": "#expressions" }
+    ]
+},
+```
+
+-   [x] `make(map[Foo]int)` `Foo` should be a type
 -   [ ] `type :: struct {}` vs `var :: struct {}{}`
 -   [x] return value types `-> (int, Error)`
 -   [x] multi var parameters `a, b, c: int`
