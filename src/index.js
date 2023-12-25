@@ -4,6 +4,7 @@ import * as shikiji_wasm from 'shikiji/wasm'
 import {WEB_SOCKET_PORT, THEME_JSON_WEBPATH, CODE_WEBPATH, LANG_WEBPATH} from './constants.js'
 
 const root = /** @type {HTMLElement} */ (document.getElementById('root'))
+const loading_indicator = /** @type {HTMLElement} */ (document.getElementById('loading_indicator'))
 
 let code_promise = fetchCode()
 let theme_promise = fetchTheme()
@@ -59,12 +60,14 @@ async function update() {
 		loadWasm: () => wasm_promise,
 	})
 
+	loading_indicator.style.display = 'block'
 	const [code, theme, lang, highlighter] = await Promise.all([
 		code_promise,
 		theme_promise,
 		lang_promise,
 		highlighter_promise,
 	])
+	loading_indicator.style.display = 'none'
 
 	const tokens_lines = highlighter.codeToThemedTokens(code, {
 		lang: lang.name,
@@ -164,5 +167,10 @@ async function update() {
 		}
 
 		tooltip_el.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`
+	})
+
+	shiki_el.addEventListener('mouseleave', () => {
+		tooltip_el.style.visibility = 'hidden'
+		last_scope_el = null
 	})
 }

@@ -10,3 +10,4 @@ TODO:
 -   [ ] `type :: struct {}` vs `var :: struct {}{}`
 -   [x] return value types `-> (int, Error)`
 -   [ ] multi var parameters `a, b, c: int`
+-   [ ] `package name`
