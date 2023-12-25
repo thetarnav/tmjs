@@ -6,30 +6,134 @@ import * as path from 'node:path'
 import * as console from 'node:console'
 import * as jsonc from 'jsonc-parser'
 import * as chokidar from 'chokidar'
+import * as ws from 'ws'
+
+import {
+	HTTP_PORT,
+	WEB_SOCKET_PORT,
+	THEME_JSONC_FILENAME,
+	CODE_FILENAME,
+	LANG_FILENAME,
+	THEME_JSON_WEBPATH,
+	CODE_WEBPATH,
+	LANG_WEBPATH,
+} from './src/constants.js'
 
 const dirname = path.dirname(url.fileURLToPath(import.meta.url))
 const src_path = path.join(dirname, 'src')
-const theme_jsonc_path = path.join(src_path, 'theme.jsonc')
-const theme_json_path = path.join(src_path, 'theme.json')
+const theme_jsonc_path = path.join(src_path, THEME_JSONC_FILENAME)
+const code_path = path.join(src_path, CODE_FILENAME)
+const lang_path = path.join(src_path, LANG_FILENAME)
 
+http.createServer(requestListener).listen(HTTP_PORT)
+console.log(`Server running at http://127.0.0.1:${HTTP_PORT}`)
+
+const wss = new ws.WebSocketServer({port: WEB_SOCKET_PORT})
+console.log('WebSocket server running at http://127.0.0.1:' + WEB_SOCKET_PORT)
+
+/** @type {Promise<string>} */
+let last_theme_json = buildTheme()
+
+chokidar.watch([theme_jsonc_path, code_path, lang_path]).on('change', handleFileChange)
+
+/**
+ * @param {http.IncomingMessage} req
+ * @param {http.ServerResponse} res
+ * @returns {Promise<void>}
+ */
+async function requestListener(req, res) {
+	if (!req.url || req.method !== 'GET') {
+		res.writeHead(404)
+		res.end()
+		console.log(`${req.method} ${req.url} 404`)
+		return
+	}
+
+	/*
+	Generated files
+	*/
+	if (req.url === THEME_JSON_WEBPATH) {
+		const theme_json = await last_theme_json
+		res.writeHead(200, {'Content-Type': 'application/json'})
+		res.end(theme_json)
+		console.log(`${req.method} ${req.url} 200`)
+		return
+	}
+
+	/*
+	Static files
+	*/
+	const relative_filepath = toWebFilepath(req.url)
+	const filepath = relative_filepath.startsWith('/node_modules/')
+		? path.join(dirname, relative_filepath)
+		: path.join(src_path, relative_filepath)
+
+	const exists = await fileExists(filepath)
+	if (!exists) {
+		res.writeHead(404)
+		res.end()
+		console.log(`${req.method} ${req.url} 404`)
+		return
+	}
+
+	const ext = toExt(filepath)
+	const mime_type = mimeType(ext)
+	res.writeHead(200, {'Content-Type': mime_type})
+
+	const stream = fs.createReadStream(filepath)
+	stream.pipe(res)
+
+	console.log(`${req.method} ${req.url} 200`)
+}
+
+/**
+ * @param {string} path
+ * @returns {void}
+ */
+function notifyClients(path) {
+	console.log(path, 'changed!')
+
+	for (const client of wss.clients) {
+		client.send(path)
+	}
+}
+
+/**
+ * @param {string} path
+ * @returns {void}
+ */
+function handleFileChange(path) {
+	switch (path) {
+		case theme_jsonc_path: {
+			last_theme_json = buildTheme()
+			notifyClients(THEME_JSON_WEBPATH)
+			break
+		}
+		case code_path: {
+			notifyClients(CODE_WEBPATH)
+			break
+		}
+		case lang_path: {
+			notifyClients(LANG_WEBPATH)
+			break
+		}
+	}
+}
+
+/**
+ * @returns {Promise<string>}
+ */
 async function buildTheme() {
 	const theme_jsonc = await fsp.readFile(theme_jsonc_path, 'utf8')
 	const theme = jsonc.parse(theme_jsonc)
-	const theme_json = JSON.stringify(theme, null, 4)
-
-	await fsp.writeFile(theme_json_path, theme_json, 'utf8')
+	return JSON.stringify(theme, null, 4)
 }
-
-chokidar.watch(theme_jsonc_path).on('change', buildTheme)
-buildTheme()
-
-const PORT = 3000
 
 /**
  * @param {string} ext
  * @returns {string}
  */
-const mimeType = ext => {
+function mimeType(ext) {
 	switch (ext) {
 		case 'html':
 			return 'text/html; charset=UTF-8'
@@ -57,68 +161,41 @@ const mimeType = ext => {
 	}
 }
 
-const trueFn = () => true
-const falseFn = () => false
+function trueFn() {
+	return true
+}
+function falseFn() {
+	return false
+}
 
 /**
  * @param {Promise<*>} promise
  * @returns {Promise<boolean>}
  */
-const promiseToBool = promise => promise.then(trueFn, falseFn)
+function promiseToBool(promise) {
+	return promise.then(trueFn, falseFn)
+}
 
 /**
  * @param {string} path
  * @returns {string}
  */
-const toWebFilepath = path => (path.endsWith('/') ? path + 'index.html' : path)
+function toWebFilepath(path) {
+	return path.endsWith('/') ? path + 'index.html' : path
+}
 
 /**
  * @param {string} filepath
  * @returns {Promise<boolean>}
  */
-const fileExists = async filepath => promiseToBool(fsp.access(filepath))
+async function fileExists(filepath) {
+	return promiseToBool(fsp.access(filepath))
+}
 
 /**
  * @param {string} filepath
  * @returns {string}
  */
-const toExt = filepath => path.extname(filepath).substring(1).toLowerCase()
-
-/**
- * @param {http.IncomingMessage} req
- * @param {http.ServerResponse} res
- * @returns {Promise<void>}
- */
-const requestListener = async (req, res) => {
-	if (!req.url || req.method !== 'GET') {
-		res.writeHead(404)
-		res.end()
-		console.log(`${req.method} ${req.url} 404`)
-		return
-	}
-
-	const relative_filepath = toWebFilepath(req.url)
-	const filepath = relative_filepath.startsWith('/node_modules/')
-		? path.join(dirname, relative_filepath)
-		: path.join(src_path, relative_filepath)
-
-	const exists = await fileExists(filepath)
-	if (!exists) {
-		res.writeHead(404)
-		res.end()
-		console.log(`${req.method} ${req.url} 404`)
-		return
-	}
-
-	const ext = toExt(filepath)
-	const mime_type = mimeType(ext)
-	res.writeHead(200, {'Content-Type': mime_type})
-
-	const stream = fs.createReadStream(filepath)
-	stream.pipe(res)
-
-	console.log(`${req.method} ${req.url} 200`)
+function toExt(filepath) {
+	return path.extname(filepath).substring(1).toLowerCase()
 }
-
-http.createServer(requestListener).listen(PORT)
-console.log(`Server running at http://127.0.0.1:${PORT}`)

@@ -199,9 +199,7 @@
 				"beginning.punctuation.definition.list.markdown",
 				"punctuation.definition.metadata.markdown",
 				"markup.heading.setext.1.markdown",
-				"markup.heading.setext.2.markdown",
-				// unison punctuation ???
-				"punctuation.definition.delayed.unison,punctuation.definition.list.begin.unison,punctuation.definition.list.end.unison,punctuation.definition.ability.begin.unison,punctuation.definition.ability.end.unison,punctuation.operator.assignment.as.unison,punctuation.separator.pipe.unison,punctuation.separator.delimiter.unison,punctuation.definition.hash.unison"
+				"markup.heading.setext.2.markdown"
 			],
 			"settings": {
 				//   "foreground": "#e26d60"
