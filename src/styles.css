@@ -113,22 +113,8 @@ code {
 	display: block;
 	min-height: 18px;
 }
-.token {
-	display: inline-block;
-	position: relative;
-}
-.token::before {
-	content: '';
-	position: absolute;
-	z-index: -1;
-	pointer-events: none;
-	inset: -1px -2px;
+.token:hover {
 	background-color: rgba(255, 255, 255, 0.1);
-	border-radius: 4px;
-	opacity: 0;
-}
-.token:hover::before {
-	opacity: 1;
 }
 .scope-tooltip {
 	position: fixed;
