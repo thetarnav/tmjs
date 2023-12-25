@@ -14,8 +14,6 @@ const wasm_promise = shikiji_wasm.getWasmInlined()
 const socket = new WebSocket('ws://localhost:' + WEB_SOCKET_PORT)
 
 socket.addEventListener('message', event => {
-	console.log('ws message:', event.data)
-
 	switch (event.data) {
 		case THEME_JSON_WEBPATH:
 			theme_promise = fetchTheme()
@@ -99,13 +97,17 @@ async function update() {
 
 				scope_el.style.color = token.color || ''
 				scope_el.textContent = explanation.content
-				switch (token.fontStyle) {
-					case 1:
+
+				if (token.fontStyle) {
+					if (token.fontStyle & shikiji.FontStyle.Italic) {
 						scope_el.style.fontStyle = 'italic'
-						break
-					case 2:
+					}
+					if (token.fontStyle & shikiji.FontStyle.Bold) {
 						scope_el.style.fontWeight = 'bold'
-						break
+					}
+					if (token.fontStyle & shikiji.FontStyle.Underline) {
+						scope_el.style.textDecoration = 'underline'
+					}
 				}
 
 				/*

@@ -3,7 +3,6 @@ import * as fs from 'node:fs'
 import * as fsp from 'node:fs/promises'
 import * as http from 'node:http'
 import * as path from 'node:path'
-import * as console from 'node:console'
 import * as jsonc from 'jsonc-parser'
 import * as chokidar from 'chokidar'
 import * as ws from 'ws'
@@ -26,9 +25,11 @@ const code_path = path.join(src_path, CODE_FILENAME)
 const lang_path = path.join(src_path, LANG_FILENAME)
 
 http.createServer(requestListener).listen(HTTP_PORT)
+// eslint-disable-next-line no-console
 console.log(`Server running at http://127.0.0.1:${HTTP_PORT}`)
 
 const wss = new ws.WebSocketServer({port: WEB_SOCKET_PORT})
+// eslint-disable-next-line no-console
 console.log('WebSocket server running at http://127.0.0.1:' + WEB_SOCKET_PORT)
 
 /** @type {Promise<string>} */
@@ -45,6 +46,7 @@ async function requestListener(req, res) {
 	if (!req.url || req.method !== 'GET') {
 		res.writeHead(404)
 		res.end()
+		// eslint-disable-next-line no-console
 		console.log(`${req.method} ${req.url} 404`)
 		return
 	}
@@ -56,6 +58,7 @@ async function requestListener(req, res) {
 		const theme_json = await last_theme_json
 		res.writeHead(200, {'Content-Type': 'application/json'})
 		res.end(theme_json)
+		// eslint-disable-next-line no-console
 		console.log(`${req.method} ${req.url} 200`)
 		return
 	}
@@ -72,6 +75,7 @@ async function requestListener(req, res) {
 	if (!exists) {
 		res.writeHead(404)
 		res.end()
+		// eslint-disable-next-line no-console
 		console.log(`${req.method} ${req.url} 404`)
 		return
 	}
@@ -83,6 +87,7 @@ async function requestListener(req, res) {
 	const stream = fs.createReadStream(filepath)
 	stream.pipe(res)
 
+	// eslint-disable-next-line no-console
 	console.log(`${req.method} ${req.url} 200`)
 }
 
@@ -91,6 +96,7 @@ async function requestListener(req, res) {
  * @returns {void}
  */
 function notifyClients(path) {
+	// eslint-disable-next-line no-console
 	console.log(path, 'changed!')
 
 	for (const client of wss.clients) {
@@ -188,7 +194,7 @@ function toWebFilepath(path) {
  * @param {string} filepath
  * @returns {Promise<boolean>}
  */
-async function fileExists(filepath) {
+function fileExists(filepath) {
 	return promiseToBool(fsp.access(filepath))
 }
 
