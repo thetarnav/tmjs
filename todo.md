@@ -28,8 +28,8 @@ TODO:
 -   [x] `map[Type]`
 -   [x] `bit_set[Type]`
 -   [x] `cast(Type)` `transmute(Type)`
--   [ ] `[Foo]Bar`
--   [ ] `^Type`
+-   [ ] `[Foo]Bar` `[dynamic]Type`
+-   [ ] `^Type` `^package.Type`
 -   [ ] `type :: struct {}` vs `var :: struct {}{}`
 -   [x] return value types `-> (int, Error)`
 -   [x] multi var parameters `a, b, c: int`
