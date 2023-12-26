@@ -13,12 +13,17 @@ import "core:time"
 
 foreign import "odin_env"
 
-@(default_calling_convention = "contextless")
 foreign odin_env {
 	trap :: proc() -> ! ---
 	alert :: proc(msg: string) ---
 	evaluate :: proc(str: string) ---
 }
+
+procedure_not :: 123
+procedure_not_indeed :: procedure_not
+
+union_not :: 123
+union_not_indeed :: union_not
 
 the_basics :: proc() {
 	fmt.println("\n# the basics")
@@ -91,11 +96,6 @@ the_basics :: proc() {
 	}
 }
 
-procedure_this_is_not :: 123
-procedure_this_is_not_indeed :: procedure_this_is_not
-
-union_this_is_not :: 123
-union_this_is_not_indeed :: union_this_is_not
 
 control_flow :: proc() {
 	fmt.println("\n# control flow")
