@@ -3,12 +3,15 @@
 	"tabWidth": 4,
 	"printWidth": 100,
 	"semi": false,
-	"singleQuote": true,
+	"singleQuote": false,
 	"useTabs": true,
 	"arrowParens": "avoid",
 	"bracketSpacing": false,
 	"endOfLine": "lf",
-	"plugins": [],
+	"plugins": ["prettier-plugin-jsdoc"],
+	"jsdocVerticalAlignment": true,
+	"jsdocPreferCodeFences": true,
+	"tsdoc": true,
 	"overrides": [
 		{
 			"files": ["*.yml", "*.yaml"],

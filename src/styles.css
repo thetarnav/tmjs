@@ -70,22 +70,22 @@ STYLES
 */
 
 @font-face {
-	font-family: 'Monaspace Argon';
-	src: url('/fonts/MonaspaceArgon-Regular.otf') format('otf');
+	font-family: "Monaspace Argon";
+	src: url("/fonts/MonaspaceArgon-Regular.otf") format("otf");
 	font-weight: normal;
 	font-style: normal;
 }
 
 @font-face {
-	font-family: 'Monaspace Argon';
-	src: url('/fonts/MonaspaceArgon-Bold.otf') format('otf');
+	font-family: "Monaspace Argon";
+	src: url("/fonts/MonaspaceArgon-Bold.otf") format("otf");
 	font-weight: bold;
 	font-style: normal;
 }
 
 @font-face {
-	font-family: 'Monaspace Argon';
-	src: url('/fonts/MonaspaceArgon-Italic.otf') format('otf');
+	font-family: "Monaspace Argon";
+	src: url("/fonts/MonaspaceArgon-Italic.otf") format("otf");
 	font-weight: normal;
 	font-style: italic;
 }
@@ -98,7 +98,7 @@ body {
 body,
 pre,
 code {
-	font-family: 'Monaspace Argon', monospace;
+	font-family: "Monaspace Argon", monospace;
 }
 
 .shiki {
@@ -138,20 +138,20 @@ code {
 #loading_indicator::after {
 	display: inline-block;
 	width: 3ch;
-	content: '...';
+	content: "...";
 	animation: dots 1s infinite;
 }
 @keyframes dots {
 	0% {
-		content: '';
+		content: "";
 	}
 	33% {
-		content: '.';
+		content: ".";
 	}
 	66% {
-		content: '..';
+		content: "..";
 	}
 	100% {
-		content: '...';
+		content: "...";
 	}
 }
