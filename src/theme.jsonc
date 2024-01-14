@@ -1,9 +1,9 @@
 {
-	"name": "Theme",
-	"base": "vs-dark",
+	"name": "My Theme",
+	"type": "dark",
 	"colors": {
 		"foreground": "#b6aaad",
-		"errorForeground": "#e26d60",
+		"errorForeground": "#c15c53",
 		"icon.foreground": "#b6aaadab",
 
 		"menu.background": "#242224",
@@ -202,7 +202,6 @@
 				"markup.heading.setext.2.markdown"
 			],
 			"settings": {
-				//   "foreground": "#e26d60"
 				// "foreground": "#D88E7A"
 				"foreground": "#b6aaad"
 			}
@@ -227,7 +226,7 @@
 				"markup.underline.link.markdown,markup.underline.link.image.markdown"
 			],
 			"settings": {
-				"foreground": "#9c66ab",
+				"foreground": "#c15c53",
 				"fontStyle": "italic"
 			}
 		},
@@ -242,13 +241,14 @@
 				"keyword.operator.module",
 				"keyword.operator.spread",
 				"keyword.operator.rest",
+				"keyword.operator.address",
 				"punctuation.definition.template-expression.begin",
 				"punctuation.definition.template-expression.end",
 				"keyword.operator.type"
 				// "keyword.operator.logical",
 			],
 			"settings": {
-				"foreground": "#9c66ab",
+				"foreground": "#c15c53",
 				"fontStyle": ""
 			}
 		},
@@ -331,19 +331,10 @@
 			"name": "keyword.operator",
 			"scope": [
 				"keyword.operator",
-				"keyword.operator.arithmetic",
-				"keyword.operator.comparison",
-				"keyword.operator.decrement",
-				"keyword.operator.increment",
-				"keyword.operator.relational",
-				"keyword.operator.assignment",
-				"keyword.operator.assignment.compound",
-				"keyword.operator.channel",
-				"keyword.operator.bitwise",
 
 				/*
-              String " ' `
-            */
+				String " ' `
+				*/
 				"punctuation.definition.string",
 				"support.type.property-name.json punctuation",
 
@@ -367,7 +358,7 @@
 		},
 		{
 			"name": "Label / annotation",
-			"scope": ["entity.name.label"],
+			"scope": ["entity.name.label", "storage.type.class"],
 			"settings": {
 				"foreground": "#d69461"
 				// "foreground": "#b6aaadab"
