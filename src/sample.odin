@@ -25,6 +25,8 @@ procedure_not_indeed :: procedure_not
 union_not :: 123
 union_not_indeed :: union_not
 
+Func :: proc (u32, int, string)
+
 the_basics :: proc() {
 	fmt.println("\n# the basics")
 
@@ -1205,7 +1207,7 @@ threading_example :: proc() {
 
 
 		for i in 0 ..< 30 {
-			// be mindful of the allocator used for tasks. The allocator needs to be thread safe, or be owned by the task for exclusive use 
+			// be mindful of the allocator used for tasks. The allocator needs to be thread safe, or be owned by the task for exclusive use
 			thread.pool_add_task(
 				&pool,
 				allocator = context.allocator,
@@ -2464,8 +2466,8 @@ matrix_type :: proc() {
 		m: matrix[2, 3]f32
 
 		m = matrix[2, 3]f32{
-			1, 9, -13, 
-			20, 5, -6, 
+			1, 9, -13,
+			20, 5, -6,
 		}
 
 		// Element types of integers, float, and complex numbers are supported by matrices.
@@ -2491,14 +2493,14 @@ matrix_type :: proc() {
 
 	{ 	// Matrices support multiplication between matrices
 		a := matrix[2, 3]f32{
-			2, 3, 1, 
-			4, 5, 0, 
+			2, 3, 1,
+			4, 5, 0,
 		}
 
 		b := matrix[3, 2]f32{
-			1, 2, 
-			3, 4, 
-			5, 6, 
+			1, 2,
+			3, 4,
+			5, 6,
 		}
 
 		fmt.println("a", a)
@@ -2511,10 +2513,10 @@ matrix_type :: proc() {
 
 	{ 	// Matrices support multiplication between matrices and arrays
 		m := matrix[4, 4]f32{
-			1, 2, 3, 4, 
-			5, 5, 4, 2, 
-			0, 1, 3, 0, 
-			0, 1, 4, 1, 
+			1, 2, 3, 4,
+			5, 5, 4, 2,
+			0, 1, 3, 0,
+			0, 1, 4, 1,
 		}
 
 		v := [4]f32{1, 5, 4, 3}
@@ -2527,8 +2529,8 @@ matrix_type :: proc() {
 
 		// Support with non-square matrices
 		s := matrix[2, 4]f32{ 	// [4][2]f32
-			2, 4, 3, 1, 
-			7, 8, 6, 5, 
+			2, 4, 3, 1,
+			7, 8, 6, 5,
 		}
 
 		w := [2]f32{1, 2}
@@ -2541,13 +2543,13 @@ matrix_type :: proc() {
 		// Not support for '/', '%', or '%%' operations
 
 		a := matrix[2, 2]i32{
-			1, 2, 
-			3, 4, 
+			1, 2,
+			3, 4,
 		}
 
 		b := matrix[2, 2]i32{
-			-5, 1, 
-			9, -7, 
+			-5, 1,
+			9, -7,
 		}
 
 		c0 := a + b
