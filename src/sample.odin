@@ -27,6 +27,9 @@ union_not_indeed :: union_not
 
 Func :: proc (u32, int, string)
 
+count_ones  :: proc(x: $T) -> T where intrinsics.type_is_integer(T) ---
+count_zeros :: proc(x: $T) -> T where intrinsics.type_is_integer(T) ---
+
 the_basics :: proc() {
 	fmt.println("\n# the basics")
 
