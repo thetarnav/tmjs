@@ -67,6 +67,13 @@ the_basics :: proc() {
 		// Raw string literals are enclosed with single back ticks
 		_ = `C:\Windows\notepad.exe`
 
+		// Ansi color codes:
+		fmt.println("\x1b[31mHello, World!\x1b[0m")
+		fmt.println("\e[31mHello, World!\e[0m")
+		fmt.println("\x1b[31;96;0mHello, World!\x1b[0m")
+		fmt.println("\e[31;96;0mHello, World!\e[0m")
+
+
 		// The length of a string in bytes can be found using the built-in `len` procedure:
 		_ = len("Foo")
 		_ = len(some_string)
