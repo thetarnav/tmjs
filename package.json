@@ -5,8 +5,7 @@
 	"private": true,
 	"license": "MIT",
 	"scripts": {
-		"dev": "node dev.js",
-		"format": "prettier --cache -w ."
+		"dev": "node dev.js"
 	},
 	"dependencies": {
 		"chokidar": "^3.5.3",
@@ -22,8 +21,6 @@
 		"@typescript-eslint/parser": "^6.16.0",
 		"eslint": "^8.56.0",
 		"eslint-plugin-eslint-comments": "^3.2.0",
-		"prettier": "^3.1.1",
-		"prettier-plugin-jsdoc": "^1.3.0",
 		"typescript": "^5.3.3"
 	}
 }
