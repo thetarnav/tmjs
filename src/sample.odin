@@ -30,6 +30,28 @@ Func :: proc (u32, int, string)
 count_ones  :: proc(x: $T) -> T where intrinsics.type_is_integer(T) ---
 count_zeros :: proc(x: $T) -> T where intrinsics.type_is_integer(T) ---
 
+Foo :: bit_field u16 { // backing type must be an integer or array of integers
+    x: i32     | 3, // signed integers will be signed extended on use
+    y: u16     | 2 + 3, // general expressions
+    z: My_Enum | foo.SOME_CONSTANT, // ability to define the bit-width elsewhere
+    w: bool    | foo.SOME_CONSTANT > 10 ? 2 : 1,
+}
+Handle :: bit_field u32 {
+    slot:       u32  | 16,
+    generation: u32  | 15,
+    in_use:     bool |  1,
+}
+
+handle: bit_field u32 {
+    slot:       u32  | 16,
+    generation: u32  | 15,
+    in_use:     bool |  1,
+} = {
+	slot:       0,
+	generation: 0,
+	in_use:     false,
+}
+
 the_basics :: proc() {
 	fmt.println("\n# the basics")
 
