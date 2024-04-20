@@ -133,7 +133,7 @@
 			"name": "Constants",
 			"scope": [
 				"markup.changed.diff",
-				"support.constant.math",
+				"support.constant",
 				"support.module.node,support.type.object.module,support.module.node",
 				"entity.name.type.module",
 				"entity.name.namespace",

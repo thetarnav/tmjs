@@ -1,4 +1,8 @@
-//+build js
+//+build !js, wasi, freestanding, essence
+//+build js wasm32, js wasm64p32
+// +private file
+// +vet !using-param
+// +no-instrumentation
 package sample
 
 import "core:fmt"
