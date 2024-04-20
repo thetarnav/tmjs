@@ -6,31 +6,34 @@ import {WEB_SOCKET_PORT, THEME_JSON_WEBPATH, CODE_WEBPATH, LANG_WEBPATH} from ".
 const root = /** @type {HTMLElement} */ (document.getElementById("root"))
 const loading_indicator = /** @type {HTMLElement} */ (document.getElementById("loading_indicator"))
 
-let code_promise = fetchCode()
+let code_promise  = fetchCode()
 let theme_promise = fetchTheme()
-let lang_promise = fetchLang()
-const wasm_promise = shikiji_wasm.getWasmInlined()
+let lang_promise  = fetchLang()
+let wasm_promise = shikiji_wasm.getWasmInlined()
 
-const socket = new WebSocket("ws://localhost:" + WEB_SOCKET_PORT)
+function main() {
+	const socket = new WebSocket("ws://localhost:" + WEB_SOCKET_PORT)
 
-socket.addEventListener("message", event => {
-	switch (event.data) {
-		case THEME_JSON_WEBPATH:
-			theme_promise = fetchTheme()
-			update()
-			break
-		case CODE_WEBPATH:
-			code_promise = fetchCode()
-			update()
-			break
-		case LANG_WEBPATH:
-			lang_promise = fetchLang()
-			update()
-			break
-	}
-})
+	socket.addEventListener("message", event => {
+		switch (event.data) {
+			case THEME_JSON_WEBPATH:
+				theme_promise = fetchTheme()
+				update()
+				break
+			case CODE_WEBPATH:
+				code_promise = fetchCode()
+				update()
+				break
+			case LANG_WEBPATH:
+				lang_promise = fetchLang()
+				update()
+				break
+		}
+	})
 
-update()
+	update()
+}
+
 
 /** @returns {Promise<string>} */
 function fetchCode() {
@@ -46,22 +49,22 @@ function fetchLang() {
 }
 
 async function update() {
+	loading_indicator.style.display = "block"
+
 	const highlighter_promise = shikiji.getHighlighterCore({
 		themes: [theme_promise],
 		langs: [lang_promise],
 		loadWasm: () => wasm_promise,
 	})
-
-	loading_indicator.style.display = "block"
+	
 	const [code, theme, lang, highlighter] = await Promise.all([
 		code_promise,
 		theme_promise,
 		lang_promise,
 		highlighter_promise,
 	])
-	loading_indicator.style.display = "none"
 
-	const tokens_lines = highlighter.codeToThemedTokens(code, {
+	const tokens_lines = highlighter.codeToThemedTokens(code, { // this is slow...
 		lang: lang.name,
 		theme: theme.name,
 	})
@@ -169,4 +172,9 @@ async function update() {
 		tooltip_el.style.visibility = "hidden"
 		last_scope_el = null
 	})
+
+	loading_indicator.style.display = "none"
 }
+
+
+main()
