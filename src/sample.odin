@@ -2,16 +2,21 @@
 package sample
 
 import "core:fmt"
-import "core:intrinsics"
+import "base:intrinsics"
 import "core:math/big"
 import "core:mem"
+import m "core:mem" // alias
 import "core:os"
 import "core:reflect"
-import "core:runtime"
+import `core:runtime` // backticks work too
 import "core:thread"
 import "core:time"
+import "../../odin/examples/demo"
+import stuff "../../odin/examples/demo"
 
 foreign import "odin_env"
+
+foreign import odin_env_alias "odin_env"
 
 foreign odin_env {
 	trap :: proc() -> ! ---
