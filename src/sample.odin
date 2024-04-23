@@ -1554,7 +1554,7 @@ deferred_procedure_associations :: proc() {
 		fmt.println("Something in the middle, mate.")
 	}
 }
-
+@(builtin, disabled=NO_DEFAULT_TEMP_ALLOCATOR)
 reflection :: proc() {
 	fmt.println("\n# reflection")
 
