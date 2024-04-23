@@ -1536,6 +1536,7 @@ bit_set_type :: proc() {
 	}
 }
 
+@private
 deferred_procedure_associations :: proc() {
 	fmt.println("\n# deferred procedure associations")
 
@@ -1836,7 +1837,7 @@ ranged_fields_for_array_compound_literals :: proc() {
 }
 
 deprecated_attribute :: proc() {
-	@(deprecated = "Use foo_v2 instead")
+	@(deprecated = "Use foo_v2 instead", private)
 	foo_v1 :: proc(x: int) {
 		fmt.println("foo_v1")
 	}
