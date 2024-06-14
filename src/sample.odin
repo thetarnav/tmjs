@@ -30,6 +30,8 @@ procedure_not_indeed :: procedure_not
 union_not :: 123
 union_not_indeed :: union_not
 
+case_cool :: 123
+
 Func :: proc (u32, int, string)
 
 count_ones  :: proc(x: $T) -> T where intrinsics.type_is_integer(T) ---
@@ -43,7 +45,7 @@ Foo :: bit_field u16 { // backing type must be an integer or array of integers
 }
 Handle :: bit_field u32 {
     slot:       u32  | 16,
-    generation: u32  | 15,
+    case_generation: u32  | 15,
     in_use:     bool |  1,
 }
 

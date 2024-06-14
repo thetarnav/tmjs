@@ -292,8 +292,8 @@
 		},
 		"case-clause": {
 			"name": "meta.case-clause.expr.odin",
-			"begin": "case",
-			"beginCaptures": { "0": { "name": "keyword.control.case.odin" } },
+			"begin": "\\b(case)\\b",
+			"beginCaptures": { "1": { "name": "keyword.control.case.odin" } },
 			"end": ":",
 			"endCaptures": { "0": { "name": "punctuation.definition.section.case-statement.odin" } },
 			"patterns": [ { "include": "#expressions" } ]
@@ -443,7 +443,7 @@
 					"match": "\\b(auto_cast|distinct|using)\\b"
 				},
 				{
-					"name": "variable.other.object.odin",
+					"name": "keyword.context.odin",
 					"match": "\\b(context)\\b"
 				},
 				{
@@ -626,7 +626,7 @@
 			"patterns": [
 				{
 					"name": "punctuation.odin",
-					"match": "\\(|\\)|\\{|\\}|;|\\[|\\]|\\.|,"
+					"match": "\\(|\\)|\\{|\\}|;|\\[|\\]|\\.|,|\\\\"
 				}
 			]
 		}
