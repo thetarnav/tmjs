@@ -8,10 +8,10 @@
 		"dev": "node dev.js"
 	},
 	"dependencies": {
+		"@shikijs/core": "^1.6.4",
 		"chokidar": "^3.6.0",
 		"jsonc-parser": "^3.2.1",
-		"shikiji": "0.9.11",
-		"shikiji-core": "0.9.11",
+		"shiki": "^1.6.4",
 		"ws": "^8.16.0"
 	},
 	"devDependencies": {

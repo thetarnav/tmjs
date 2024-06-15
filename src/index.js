@@ -1,5 +1,5 @@
-import * as shikiji from "shikiji/core"
-import * as shikiji_wasm from "shikiji/wasm"
+import * as shiki from "shiki"
+import getShikiWasm from 'shiki/wasm'
 
 import {WEB_SOCKET_PORT, THEME_JSON_WEBPATH, CODE_WEBPATH, LANG_WEBPATH} from "./constants.js"
 
@@ -9,7 +9,6 @@ const loading_indicator = /** @type {HTMLElement} */ (document.getElementById("l
 let code_promise  = fetchCode()
 let theme_promise = fetchTheme()
 let lang_promise  = fetchLang()
-let wasm_promise = shikiji_wasm.getWasmInlined()
 
 function main() {
 	const socket = new WebSocket("ws://localhost:" + WEB_SOCKET_PORT)
@@ -39,11 +38,11 @@ function main() {
 function fetchCode() {
 	return fetch(CODE_WEBPATH).then(res => res.text())
 }
-/** @returns {Promise<shikiji.ThemeRegistration>} */
+/** @returns {Promise<shiki.ThemeRegistration>} */
 function fetchTheme() {
 	return fetch(THEME_JSON_WEBPATH).then(res => res.json())
 }
-/** @returns {Promise<shikiji.LanguageRegistration>} */
+/** @returns {Promise<shiki.LanguageRegistration>} */
 function fetchLang() {
 	return fetch(LANG_WEBPATH).then(res => res.json())
 }
@@ -51,10 +50,10 @@ function fetchLang() {
 async function update() {
 	loading_indicator.style.display = "block"
 
-	const highlighter_promise = shikiji.getHighlighterCore({
-		themes: [theme_promise],
-		langs: [lang_promise],
-		loadWasm: () => wasm_promise,
+	const highlighter_promise = shiki.getHighlighterCore({
+		themes:   [theme_promise],
+		langs:    [lang_promise],
+		loadWasm: getShikiWasm,
 	})
 	
 	const [code, theme, lang, highlighter] = await Promise.all([
@@ -64,18 +63,19 @@ async function update() {
 		highlighter_promise,
 	])
 
-	const tokens_lines = highlighter.codeToThemedTokens(code, { // this is slow...
+	const tokens_lines = highlighter.codeToTokens(code, { // this is slow...
 		lang: lang.name,
-		theme: theme.name,
+		theme: /** @type {string} */ (theme.name),
+		includeExplanation: true,
 	})
 
 	/** @type {HTMLElement[]} */
-	const elements_lines = new Array(tokens_lines.length)
+	const elements_lines = new Array(tokens_lines.tokens.length)
 	/** @type {Map<HTMLElement, string>} */
 	const scopes_map = new Map()
 
-	for (let i = 0; i < tokens_lines.length; i += 1) {
-		const tokens = tokens_lines[i]
+	for (let i = 0; i < tokens_lines.tokens.length; i += 1) {
+		const tokens = tokens_lines.tokens[i]
 		/** @type {HTMLElement[]} */
 		const elements = new Array(tokens.length)
 
@@ -96,13 +96,13 @@ async function update() {
 				scope_el.textContent = explanation.content
 
 				if (token.fontStyle) {
-					if (token.fontStyle & shikiji.FontStyle.Italic) {
+					if (token.fontStyle & shiki.FontStyle.Italic) {
 						scope_el.style.fontStyle = "italic"
 					}
-					if (token.fontStyle & shikiji.FontStyle.Bold) {
+					if (token.fontStyle & shiki.FontStyle.Bold) {
 						scope_el.style.fontWeight = "bold"
 					}
-					if (token.fontStyle & shikiji.FontStyle.Underline) {
+					if (token.fontStyle & shiki.FontStyle.Underline) {
 						scope_el.style.textDecoration = "underline"
 					}
 				}
