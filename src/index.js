@@ -1,5 +1,6 @@
 import * as shiki from "shiki"
 import getShikiWasm from 'shiki/wasm'
+import * as tm from "./tm.js"
 
 import {WEB_SOCKET_PORT, THEME_JSON_WEBPATH, CODE_WEBPATH, LANG_WEBPATH} from "./constants.js"
 
@@ -62,6 +63,20 @@ async function update() {
 		lang_promise,
 		highlighter_promise,
 	])
+
+	// {
+	// 	if (!tm.validate_grammar(lang)) {
+	// 		console.error("Invalid grammar")
+	// 		return
+	// 	}
+	// 	let tokens = tm.code_to_tokens(code, lang)
+
+	// 	for (const token of tokens) {
+	// 		console.log(token)
+	// 	}
+
+	// 	// return
+	// }
 
 	const tokens_lines = highlighter.codeToTokens(code, { // this is slow...
 		lang: lang.name,
