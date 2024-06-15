@@ -1,7 +1,6 @@
 {
 	"recommendations": [
 		"danielgavin.ols",
-		"esbenp.prettier-vscode",
 		"redcmd.tmlanguage-syntax-highlighter"
 	]
 }
