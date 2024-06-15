@@ -364,22 +364,14 @@
 			]
 		},
 		"block-comment": {
-			"patterns": [
-				{
-					"name": "comment.block.odin",
-					"begin": "/\\*",
-					"end": "\\*/",
-					"patterns": [ { "include": "#block-comment" } ]
-				}
-			]
+			"name": "comment.block.odin",
+			"begin": "/\\*",
+			"end": "\\*/",
+			"patterns": [ { "include": "#block-comment" } ]
 		},
 		"type-name": {
-			"patterns": [
-				{
-					"name": "entity.name.type.odin",
-					"match": "\\b[A-Za-z_]\\w*\\b"
-				}
-			]
+			"name": "entity.name.type.odin",
+			"match": "\\b[A-Za-z_]\\w*\\b"
 		},
 		"type-parameter": {
 			"captures": {
@@ -389,12 +381,8 @@
 			"match": "(\\$)\\s*(\\b[A-Za-z_]\\w*\\b)"
 		},
 		"variable-name": {
-			"patterns": [
-				{
-					"name": "variable.name.odin",
-					"match": "\\b[A-Za-z_]\\w*\\b"
-				}
-			]
+			"name": "variable.name.odin",
+			"match": "\\b[A-Za-z_]\\w*\\b"
 		},
 		"keywords": {
 			"patterns": [
@@ -615,12 +603,8 @@
 			]
 		},
 		"punctuation": {
-			"patterns": [
-				{
-					"name": "punctuation.odin",
-					"match": "\\(|\\)|\\{|\\}|;|\\[|\\]|\\.|,|\\\\"
-				}
-			]
+			"name": "punctuation.odin",
+			"match": "\\(|\\)|\\{|\\}|;|\\[|\\]|\\.|,|\\\\"
 		}
 	},
 	"scopeName": "source.odin"
