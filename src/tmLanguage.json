@@ -558,33 +558,30 @@
 		},
 		"strings": {
 			"patterns": [
-				{ "include": "#strings-quoted-double" },
-				{ "include": "#strings-quoted-single" },
-				{ "include": "#strings-quoted-raw" }
+				{
+					"name": "string.quoted.double.odin",
+					"begin": "\"",
+					"beginCaptures": { "0": { "name": "punctuation.definition.string.begin.odin" } },
+					"end": "\"",
+					"endCaptures": { "0": { "name": "punctuation.definition.string.end.odin" } },
+					"patterns": [ { "include": "#string-escaped-char" } ]
+				},
+				{
+					"name": "string.quoted.single.odin",
+					"begin": "'",
+					"beginCaptures": { "0": { "name": "punctuation.definition.string.begin.odin" } },
+					"end": "'",
+					"endCaptures": { "0": { "name": "punctuation.definition.string.end.odin" } },
+					"patterns": [ { "include": "#string-escaped-char" } ]
+				},
+				{
+					"name": "string.quoted.raw.odin",
+					"begin": "`",
+					"beginCaptures": { "0": { "name": "punctuation.definition.string.begin.odin" } },
+					"end": "`",
+					"endCaptures": { "0": { "name": "punctuation.definition.string.end.odin" } }
+				}
 			]
-		},
-		"strings-quoted-double": {
-			"name": "string.quoted.double.odin",
-			"begin": "\"",
-			"beginCaptures": { "0": { "name": "punctuation.definition.string.begin.odin" } },
-			"end": "\"",
-			"endCaptures": { "0": { "name": "punctuation.definition.string.end.odin" } },
-			"patterns": [ { "include": "#string-escaped-char" } ]
-		},
-		"strings-quoted-single": {
-			"name": "string.quoted.single.odin",
-			"begin": "'",
-			"beginCaptures": { "0": { "name": "punctuation.definition.string.begin.odin" } },
-			"end": "'",
-			"endCaptures": { "0": { "name": "punctuation.definition.string.end.odin" } },
-			"patterns": [ { "include": "#string-escaped-char" } ]
-		},
-		"strings-quoted-raw": {
-			"name": "string.quoted.raw.odin",
-			"begin": "`",
-			"beginCaptures": { "0": { "name": "punctuation.definition.string.begin.odin" } },
-			"end": "`",
-			"endCaptures": { "0": { "name": "punctuation.definition.string.end.odin" } }
 		},
 		"string-escaped-char": {
 			"patterns": [

@@ -29,7 +29,7 @@
  */
 
 /** 
- * @typedef {Record<number, Capture>} Captures
+ * @typedef {Dict<Capture>} Captures
  */
 
 /**
@@ -95,7 +95,8 @@ export function validate_capture(capture) {
 
 class Tokenizer {
 	code = ""
-	pos  = 0
+	pos_char = 0
+	pos_line = 0
 	repo = /** @type {Repository} */({})
 }
 
@@ -118,7 +119,7 @@ export function code_to_tokens(code, grammar) {
 	/** @type {Token[]} */
 	let code_tokens = []
 
-	loop: while (t.pos < t.code.length) {
+	loop: while (t.pos_char < t.code.length) {
 		for (const pattern of grammar.patterns) {
 			let tokens = try_get_tokens(t, pattern)
 			if (tokens.length > 0) {
@@ -126,10 +127,25 @@ export function code_to_tokens(code, grammar) {
 				continue loop
 			}
 		}
-		t.pos += 1
+		increse_pos(t, 1)
 	}
 
 	return code_tokens
+}
+
+/**
+ * @param {Tokenizer} t 
+ * @param {number}    n 
+ */
+function increse_pos(t, n) {
+	while (n > 0) {
+		if (t.code[t.pos_char] === "\n") {
+			t.pos_line = t.pos_char + 1
+		}
+
+		t.pos_char += 1
+		n -= 1
+	}
 }
 
 /**
@@ -143,7 +159,8 @@ function try_get_tokens(t, pattern) {
 	switch (true) {
 	case pattern.match !== undefined: {
 		let match = new RegExp(pattern.match, "y")
-		let result = match.exec(t.code.substring(t.pos))
+		match.lastIndex = t.pos_char - t.pos_line
+		let result = match.exec(t.code.slice(t.pos_line))
 		if (result === null) break
 	
 		let token = new Token()
@@ -151,41 +168,59 @@ function try_get_tokens(t, pattern) {
 		if (pattern.name) token.scope = pattern.name
 		tokens.push(token)
 
-		t.pos += match.lastIndex
+		increse_pos(t, result[0].length)
 		break
 	}
 	case pattern.begin !== undefined && pattern.end !== undefined: {
-		let begin = new RegExp(pattern.begin, "y")
-		let begin_result = begin.exec(t.code.substring(t.pos))
+		let begin_match = new RegExp(pattern.begin, "y")
+		begin_match.lastIndex = t.pos_char - t.pos_line
+		let begin_result = begin_match.exec(t.code.slice(t.pos_line))
 		if (begin_result === null) break
 
-		let token = new Token()
-		if (pattern.name) token.scope = pattern.name
-		tokens.push(token)
+		let pattern_token = new Token()
+		if (pattern.name) pattern_token.scope = pattern.name
+		tokens.push(pattern_token)
+
+		let begin_token = new Token()
+		begin_token.content = begin_result[0]
+		pattern_token.tokens.push(begin_token)
 	
-		t.pos += begin.lastIndex
+		let pos_begin = t.pos_char
+		increse_pos(t, begin_result[0].length)
 
-		let end = new RegExp(pattern.end, "y")
+		let end_match = new RegExp(pattern.end, "y")
 
-		loop: while (t.pos < t.code.length) {
+		loop: while (t.pos_char < t.code.length) {
+			end_match.lastIndex = t.pos_char - t.pos_line
+			let end_result = end_match.exec(t.code.slice(t.pos_line))
+			if (end_result) {
+				increse_pos(t, end_result[0].length)
+				pattern_token.content = t.code.slice(pos_begin, t.pos_char)
+
+				if (pattern_token.tokens[pattern_token.tokens.length-1].scope !== "") {
+					pattern_token.tokens.push(new Token())
+				}
+				pattern_token.tokens[pattern_token.tokens.length-1].content += end_result[0]
+
+				break
+			}
+
 			if (pattern.patterns !== undefined) {
 				for (let subpattern of pattern.patterns) {
 					let tokens = try_get_tokens(t, subpattern)
 					if (tokens.length > 0) {
-						token.tokens.push.apply(tokens, tokens)
+						pattern_token.tokens.push.apply(pattern_token.tokens, tokens)
 						continue loop
 					}
 				}
 			}
 
-			let end_result = end.exec(t.code.substring(t.pos))
-			if (end_result) {
-				t.pos += end.lastIndex
-				token.content = t.code.slice(begin_result.index, end_result.index)
-				break
+			if (pattern_token.tokens[pattern_token.tokens.length-1].scope !== "") {
+				pattern_token.tokens.push(new Token())
 			}
+			pattern_token.tokens[pattern_token.tokens.length-1].content += t.code[t.pos_char]
 
-			t.pos += 1
+			increse_pos(t, 1)
 		}
 
 		break

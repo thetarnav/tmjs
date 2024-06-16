@@ -69,20 +69,26 @@ async function update() {
 			console.error("Invalid grammar")
 			return
 		}
+		let start = performance.now()
 		let tokens = tm.code_to_tokens(code, lang)
+		let end = performance.now()
+		console.log("mine: " + (end - start) + "ms")
 
-		for (const token of tokens) {
-			console.log(token)
-		}
+		// for (const token of tokens) {
+		// 	console.log(token)
+		// }
 
 		// return
 	}
 
+	let start = performance.now()
 	const tokens_lines = highlighter.codeToTokens(code, { // this is slow...
 		lang: lang.name,
 		theme: /** @type {string} */ (theme.name),
 		includeExplanation: true,
 	})
+	let end = performance.now()
+	console.log("shiki: " + (end - start) + "ms")
 
 	/** @type {HTMLElement[]} */
 	const elements_lines = new Array(tokens_lines.tokens.length)
