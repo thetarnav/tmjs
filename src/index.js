@@ -14,22 +14,22 @@ let lang_promise  = fetchLang()
 function main() {
 	const socket = new WebSocket("ws://localhost:" + WEB_SOCKET_PORT)
 
-	socket.addEventListener("message", event => {
-		switch (event.data) {
-			case THEME_JSON_WEBPATH:
-				theme_promise = fetchTheme()
-				update()
-				break
-			case CODE_WEBPATH:
-				code_promise = fetchCode()
-				update()
-				break
-			case LANG_WEBPATH:
-				lang_promise = fetchLang()
-				update()
-				break
-		}
-	})
+	// socket.addEventListener("message", event => {
+	// 	switch (event.data) {
+	// 		case THEME_JSON_WEBPATH:
+	// 			theme_promise = fetchTheme()
+	// 			update()
+	// 			break
+	// 		case CODE_WEBPATH:
+	// 			code_promise = fetchCode()
+	// 			update()
+	// 			break
+	// 		case LANG_WEBPATH:
+	// 			lang_promise = fetchLang()
+	// 			update()
+	// 			break
+	// 	}
+	// })
 
 	update()
 }
@@ -74,11 +74,11 @@ async function update() {
 		let end = performance.now()
 		console.log("mine: " + (end - start) + "ms")
 
-		// for (const token of tokens) {
-		// 	console.log(token)
-		// }
+		for (const token of tokens) {
+			console.log(token)
+		}
 
-		// return
+		return
 	}
 
 	let start = performance.now()

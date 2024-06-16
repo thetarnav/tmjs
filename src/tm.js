@@ -120,6 +120,7 @@ export function code_to_tokens(code, grammar) {
 	let code_tokens = []
 
 	loop: while (t.pos_char < t.code.length) {
+
 		for (const pattern of grammar.patterns) {
 			let tokens = try_get_tokens(t, pattern)
 			if (tokens.length > 0) {
@@ -127,6 +128,7 @@ export function code_to_tokens(code, grammar) {
 				continue loop
 			}
 		}
+		
 		increse_pos(t, 1)
 	}
 
@@ -157,8 +159,9 @@ function try_get_tokens(t, pattern) {
 	let tokens = []
 
 	switch (true) {
-	case pattern.match !== undefined: {
-		let match = new RegExp(pattern.match, "y")
+	case pattern.match !== undefined:
+	{
+		let match = new RegExp(pattern.match, "yd")
 		match.lastIndex = t.pos_char - t.pos_line
 		let result = match.exec(t.code.slice(t.pos_line))
 		if (result === null) break
@@ -168,10 +171,58 @@ function try_get_tokens(t, pattern) {
 		if (pattern.name) token.scope = pattern.name
 		tokens.push(token)
 
+		// handle captures
+		if (pattern.captures !== undefined)
+		{
+			if (result.length === 1)
+			{
+				let subtoken = new Token()
+				subtoken.content = result[0]
+				let capture = pattern.captures[0]
+				if (capture !== undefined) subtoken.scope = capture.name
+				token.tokens.push(subtoken)
+			}
+			else
+			{
+				let last_end = 0
+				
+				for (let key = 1; key < result.length; key += 1)
+				{
+					let group   = result[key]
+					let indices = /** @type {RegExpIndicesArray} */(result.indices)[key]
+					if (indices === undefined) continue
+					let [pos, end] = indices
+
+					// text between captures
+					if (pos > last_end) {
+						let subtoken = new Token()
+						subtoken.content = t.code.slice(t.pos_char + last_end, t.pos_char + pos)
+						token.tokens.push(subtoken)
+					}
+					last_end = end
+
+					let capture_token = new Token()
+					capture_token.content = group
+					let capture = pattern.captures[key]
+					if (capture !== undefined) capture_token.scope = capture.name
+					token.tokens.push(capture_token)
+				}
+
+				// text after last capture
+				if (last_end < result[0].length) {
+					let subtoken = new Token()
+					subtoken.content = t.code.slice(t.pos_char + last_end, t.pos_char + result[0].length)
+					token.tokens.push(subtoken)
+				}
+			}
+
+		}
+
 		increse_pos(t, result[0].length)
 		break
 	}
-	case pattern.begin !== undefined && pattern.end !== undefined: {
+	case pattern.begin !== undefined && pattern.end !== undefined:
+	{
 		let begin_match = new RegExp(pattern.begin, "y")
 		begin_match.lastIndex = t.pos_char - t.pos_line
 		let begin_result = begin_match.exec(t.code.slice(t.pos_line))
@@ -191,6 +242,7 @@ function try_get_tokens(t, pattern) {
 		let end_match = new RegExp(pattern.end, "y")
 
 		loop: while (t.pos_char < t.code.length) {
+
 			end_match.lastIndex = t.pos_char - t.pos_line
 			let end_result = end_match.exec(t.code.slice(t.pos_line))
 			if (end_result) {
@@ -225,14 +277,16 @@ function try_get_tokens(t, pattern) {
 
 		break
 	}
-	case pattern.include !== undefined: {
+	case pattern.include !== undefined:
+	{
 		let included = t.repo[pattern.include.substring(1)]
 		if (included) {
 			tokens.push.apply(tokens, try_get_tokens(t, included))
 		}
 		break
 	}
-	case pattern.patterns !== undefined: {
+	case pattern.patterns !== undefined:
+	{
 		for (let subpattern of pattern.patterns) {
 			let subtokens = try_get_tokens(t, subpattern)
 			if (subtokens.length > 0) {
