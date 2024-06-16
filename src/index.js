@@ -64,19 +64,19 @@ async function update() {
 		highlighter_promise,
 	])
 
-	// {
-	// 	if (!tm.validate_grammar(lang)) {
-	// 		console.error("Invalid grammar")
-	// 		return
-	// 	}
-	// 	let tokens = tm.code_to_tokens(code, lang)
+	{
+		if (!tm.validate_grammar(lang)) {
+			console.error("Invalid grammar")
+			return
+		}
+		let tokens = tm.code_to_tokens(code, lang)
 
-	// 	for (const token of tokens) {
-	// 		console.log(token)
-	// 	}
+		for (const token of tokens) {
+			console.log(token)
+		}
 
-	// 	// return
-	// }
+		// return
+	}
 
 	const tokens_lines = highlighter.codeToTokens(code, { // this is slow...
 		lang: lang.name,

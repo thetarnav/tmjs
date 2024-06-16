@@ -93,19 +93,17 @@ export function validate_capture(capture) {
 	)
 }
 
-/**
- * @typedef  {object}     Tokenizer
- * @property {string}     code
- * @property {number}     pos
- * @property {Repository} repo
- */
+class Tokenizer {
+	code = ""
+	pos  = 0
+	repo = /** @type {Repository} */({})
+}
 
-/**
- * @typedef  {object}  Token
- * @property {string}  content
- * @property {Token[]} tokens
- * @property {string}  scope
- */
+class Token {
+	content = ""
+	tokens  = /** @type {Token[]} */([])
+	scope   = ""
+}
 
 /**
  * @param   {string}  code 
@@ -113,28 +111,25 @@ export function validate_capture(capture) {
  * @returns {Token[]} */
 export function code_to_tokens(code, grammar) {
 
-	/** @type {Tokenizer} */
-	let t = {
-		code: code,
-		pos : 0,
-		repo: grammar.repository,
-	}
+	let t = new Tokenizer()
+	t.code = code
+	t.repo = grammar.repository
 
 	/** @type {Token[]} */
-	let tokens = []
+	let code_tokens = []
 
 	loop: while (t.pos < t.code.length) {
 		for (const pattern of grammar.patterns) {
 			let tokens = try_get_tokens(t, pattern)
 			if (tokens.length > 0) {
-				tokens.push.apply(tokens, tokens)
+				code_tokens.push.apply(code_tokens, tokens)
 				continue loop
 			}
 		}
 		t.pos += 1
 	}
 
-	return tokens
+	return code_tokens
 }
 
 /**
@@ -146,46 +141,72 @@ function try_get_tokens(t, pattern) {
 	let tokens = []
 
 	switch (true) {
-	case pattern.match !== undefined:
+	case pattern.match !== undefined: {
 		let match = new RegExp(pattern.match, "y")
-		match.lastIndex = t.pos
-		let result = match.exec(t.code)
+		let result = match.exec(t.code.substring(t.pos))
 		if (result === null) break
 	
-		t.pos = match.lastIndex
-		tokens.push({ content: result[0], tokens: [], scope: pattern.name || "" })
-		break
-	case pattern.begin !== undefined && pattern.end !== undefined:
-		let begin = new RegExp(pattern.begin, "y")
-		begin.lastIndex = t.pos
-		let begin_result = begin.exec(t.code)
-		if (begin_result === null) break
-	
-		t.pos = begin.lastIndex
-		let end = new RegExp(pattern.end, "y")
-		end.lastIndex = t.pos
-	
-		let end_result = end.exec(t.code)
-		if (!end_result) break
+		let token = new Token()
+		token.content = result[0]
+		if (pattern.name) token.scope = pattern.name
+		tokens.push(token)
 
-		let content = t.code.slice(t.pos, end_result.index)
-		tokens.push({ content, tokens: [], scope: pattern.name || "" })
-		t.pos = end.lastIndex
-		// while (true) {
-		// }
+		t.pos += match.lastIndex
 		break
-	case pattern.include !== undefined:
+	}
+	case pattern.begin !== undefined && pattern.end !== undefined: {
+		let begin = new RegExp(pattern.begin, "y")
+		let begin_result = begin.exec(t.code.substring(t.pos))
+		if (begin_result === null) break
+
+		let token = new Token()
+		if (pattern.name) token.scope = pattern.name
+		tokens.push(token)
+	
+		t.pos += begin.lastIndex
+
+		let end = new RegExp(pattern.end, "y")
+
+		loop: while (t.pos < t.code.length) {
+			if (pattern.patterns !== undefined) {
+				for (let subpattern of pattern.patterns) {
+					let tokens = try_get_tokens(t, subpattern)
+					if (tokens.length > 0) {
+						token.tokens.push.apply(tokens, tokens)
+						continue loop
+					}
+				}
+			}
+
+			let end_result = end.exec(t.code.substring(t.pos))
+			if (end_result) {
+				t.pos += end.lastIndex
+				token.content = t.code.slice(begin_result.index, end_result.index)
+				break
+			}
+
+			t.pos += 1
+		}
+
+		break
+	}
+	case pattern.include !== undefined: {
 		let included = t.repo[pattern.include.substring(1)]
 		if (included) {
 			tokens.push.apply(tokens, try_get_tokens(t, included))
 		}
 		break
-	case pattern.patterns !== undefined:
-		for (const subpattern of pattern.patterns) {
+	}
+	case pattern.patterns !== undefined: {
+		for (let subpattern of pattern.patterns) {
 			let subtokens = try_get_tokens(t, subpattern)
-			tokens.push.apply(tokens, subtokens)
+			if (subtokens.length > 0) {
+				tokens.push.apply(tokens, subtokens)
+				break
+			}
 		}
 		break
+	}
 	}
 
 	return tokens
