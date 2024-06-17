@@ -148,8 +148,9 @@ export function code_to_tokens(code, grammar)
 	loop: while (t.pos_char < t.code.length)
 	{
 		for (const pattern of grammar.patterns) {
-			let count = pattern_to_tokens(t, pattern, source_scopes)
-			if (count > 0) continue loop
+			if (pattern_to_tokens(t, pattern, source_scopes)) {
+				continue loop
+			}
 		}
 		
 		increse_pos(t, 1)
@@ -163,13 +164,13 @@ export function code_to_tokens(code, grammar)
  * @param   {RegExp}               match
  * @param   {Captures | undefined} captures
  * @param   {string[]}             pattern_scopes
- * @returns {number}               */
+ * @returns {boolean}              success */
 function match_token_with_captures(t, match, captures, pattern_scopes)
 {
 	let pos_token = t.pos_char
 	match.lastIndex = pos_token - t.pos_line
 	let result = match.exec(t.code.slice(t.pos_line))
-	if (result === null) return 0
+	if (result === null) return false
 
 	increse_pos(t, result[0].length)
 
@@ -181,7 +182,7 @@ function match_token_with_captures(t, match, captures, pattern_scopes)
 		}
 		t.tokens[t.len] = token
 		t.len += 1
-		return 1
+		return true
 	}
 
 	if (result.length === 1)
@@ -193,10 +194,9 @@ function match_token_with_captures(t, match, captures, pattern_scopes)
 		if (captures[0] !== undefined) token.scopes.push(captures[0].name)
 		t.tokens[t.len] = token
 		t.len += 1
-		return 1
+		return true
 	}
 
-	let tokens_count = 0
 	let last_end = 0
 	
 	for (let key = 1; key < result.length; key += 1)
@@ -214,7 +214,6 @@ function match_token_with_captures(t, match, captures, pattern_scopes)
 			}
 			t.tokens[t.len] = subtoken
 			t.len += 1
-			tokens_count += 1
 		}
 		last_end = end
 
@@ -224,10 +223,9 @@ function match_token_with_captures(t, match, captures, pattern_scopes)
 			scopes : pattern_scopes,
 		}
 		let capture = captures[key]
-		if (capture !== undefined) capture_token.scopes = capture_token.scopes.concat(capture.name)
+		if (capture !== undefined) capture_token.scopes = [...capture_token.scopes, capture.name]
 		t.tokens[t.len] = capture_token
 		t.len += 1
-		tokens_count += 1
 	}
 
 	// text after last capture
@@ -239,17 +237,16 @@ function match_token_with_captures(t, match, captures, pattern_scopes)
 		}
 		t.tokens[t.len] = subtoken
 		t.len += 1
-		tokens_count += 1
 	}
 
-	return tokens_count
+	return true
 }
 
 /**
  * @param   {Tokenizer} t
  * @param   {Pattern}   pattern
  * @param   {string[]}  parent_scopes
- * @returns {number}    */
+ * @returns {boolean}   success */
 function pattern_to_tokens(t, pattern, parent_scopes)
 {
 	let pattern_scopes = pattern.name !== undefined
@@ -265,26 +262,23 @@ function pattern_to_tokens(t, pattern, parent_scopes)
 	case pattern.begin !== undefined && pattern.end !== undefined:
 	{
 		// begin
-		let begin_match = new RegExp(pattern.begin, "yd")
-		let total_count = match_token_with_captures(t, begin_match, pattern.beginCaptures, pattern_scopes)
-		if (total_count === 0) return 0
+		let begin_match = new RegExp(pattern.begin, "yd") 
+		if (!match_token_with_captures(t, begin_match, pattern.beginCaptures, pattern_scopes)) {
+			return false
+		}
 
 		let end_match = new RegExp(pattern.end, "yd")
 		let patterns = pattern.patterns || []
 
 		loop: while (t.pos_char < t.code.length) {
 			// end
-			let count = match_token_with_captures(t, end_match, pattern.endCaptures, pattern_scopes)
-			if (count > 0) {
-				total_count += count
+			if (match_token_with_captures(t, end_match, pattern.endCaptures, pattern_scopes)) {
 				break loop
 			}
 
 			// patterns
 			for (let subpattern of patterns) {
-				let count = pattern_to_tokens(t, subpattern, pattern_scopes)
-				if (count > 0) {
-					total_count += count
+				if (pattern_to_tokens(t, subpattern, pattern_scopes)) {
 					continue loop
 				}
 			}
@@ -295,33 +289,33 @@ function pattern_to_tokens(t, pattern, parent_scopes)
 				last_token = {content: "", scopes: pattern_scopes}
 				t.tokens[t.len] = last_token
 				t.len += 1
-				total_count += 1
 			}
 			last_token.content += t.code[t.pos_char]
 
 			increse_pos(t, 1)
 		}
 
-		return total_count
+		return true
 	}
 	case pattern.include !== undefined:
 	{
 		let included = t.repo[pattern.include.substring(1)]
 		return included
 			? pattern_to_tokens(t, included, pattern_scopes)
-			: 0
+			: false
 	}
 	case pattern.patterns !== undefined:
 	{
 		for (let subpattern of pattern.patterns) {
-			let count = pattern_to_tokens(t, subpattern, pattern_scopes)
-			if (count > 0) return count
+			if (pattern_to_tokens(t, subpattern, pattern_scopes)) {
+				return true
+			}
 		}
-		return 0
+		return false
 	}
 	}
 
-	return 0
+	return false
 }
 
 
