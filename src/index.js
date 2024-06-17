@@ -65,12 +65,15 @@ async function update() {
 	])
 
 	{
-		if (!tm.validate_grammar(lang)) {
+		if (!tm.validate_json_grammar(lang)) {
 			console.error("Invalid grammar")
 			return
 		}
+
+		let grammar = tm.json_to_grammar(lang)
+		
 		let start = performance.now()
-		let tokens = tm.code_to_tokens(code, lang)
+		let tokens = tm.code_to_tokens(code, grammar)
 		let end = performance.now()
 		console.log("mine: " + (end - start) + "ms")
 
