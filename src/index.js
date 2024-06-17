@@ -74,9 +74,7 @@ async function update() {
 		let end = performance.now()
 		console.log("mine: " + (end - start) + "ms")
 
-		for (const token of tokens) {
-			console.log(token)
-		}
+		console.log(tokens)
 
 		return
 	}

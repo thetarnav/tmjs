@@ -93,18 +93,21 @@ export function validate_capture(capture) {
 	)
 }
 
-class Tokenizer {
-	code = ""
-	pos_char = 0
-	pos_line = 0
-	repo = /** @type {Repository} */({})
-}
+/**
+ * @typedef  {object}              Tokenizer
+ * @property {string}              code
+ * @property {Repository}          repo
+ * @property {number}              pos_char
+ * @property {number}              pos_line
+ * @property {{[_:number]: Token}} tokens // preallocated array
+ * @property {number}              len    // len of tokens
+ */
 
-class Token {
-	content = ""
-	tokens  = /** @type {Token[]} */([])
-	scope   = ""
-}
+/**
+ * @typedef  {object}   Token
+ * @property {string}   content
+ * @property {string[]} scopes
+ */
 
 /**
  * @param {Tokenizer} t 
@@ -128,183 +131,357 @@ function increse_pos(t, n)
  * @returns {Token[]} */
 export function code_to_tokens(code, grammar)
 {
-	let t = new Tokenizer()
-	t.code = code
-	t.repo = grammar.repository
+	/** @type {Token[]} */ let tokens = new Array(code.length)
 
-	/** @type {Token[]} */
-	let code_tokens = []
+	/** @type {Tokenizer} */
+	let t = {
+		code    : code,
+		pos_char: 0,
+		pos_line: 0,
+		repo    : grammar.repository,
+		tokens  : tokens,
+		len     : 0,
+	}
+
+	/** @type {string[]} */ let source_scopes = [grammar.scopeName]
 
 	loop: while (t.pos_char < t.code.length)
 	{
 		for (const pattern of grammar.patterns) {
-			let tokens = try_get_tokens(t, pattern)
-			if (tokens.length > 0) {
-				code_tokens.push.apply(code_tokens, tokens)
-				continue loop
-			}
+			let count = pattern_to_tokens(t, pattern, source_scopes)
+			if (count > 0) continue loop
 		}
 		
 		increse_pos(t, 1)
 	}
 
-	return code_tokens
+	return tokens.slice(0, t.len)
 }
 
 /**
  * @param   {Tokenizer}            t
  * @param   {RegExp}               match
  * @param   {Captures | undefined} captures
- * @param   {string | undefined}   scope_name
- * @returns {Token | null}         */
-function match_token_with_captures(t, match, captures, scope_name)
+ * @param   {string[]}             pattern_scopes
+ * @returns {number}               */
+function match_token_with_captures(t, match, captures, pattern_scopes)
 {
-	match.lastIndex = t.pos_char - t.pos_line
+	let pos_token = t.pos_char
+	match.lastIndex = pos_token - t.pos_line
 	let result = match.exec(t.code.slice(t.pos_line))
-	if (result === null) return null
-
-	let token = new Token()
-	token.content = result[0]
-	if (scope_name) token.scope = scope_name
-
-	// handle captures
-	if (captures !== undefined)
-	{
-		if (result.length === 1)
-		{
-			let subtoken = new Token()
-			subtoken.content = result[0]
-			let capture = captures[0]
-			if (capture !== undefined) subtoken.scope = capture.name
-			token.tokens.push(subtoken)
-		}
-		else {
-			let last_end = 0
-			
-			for (let key = 1; key < result.length; key += 1)
-			{
-				let group   = result[key]
-				let indices = /** @type {RegExpIndicesArray} */(result.indices)[key]
-				if (indices === undefined) continue
-				let [pos, end] = indices
-
-				// text between captures
-				if (pos > last_end) {
-					let subtoken = new Token()
-					subtoken.content = t.code.slice(t.pos_char + last_end, t.pos_char + pos)
-					token.tokens.push(subtoken)
-				}
-				last_end = end
-
-				let capture_token = new Token()
-				capture_token.content = group
-				let capture = captures[key]
-				if (capture !== undefined) capture_token.scope = capture.name
-				token.tokens.push(capture_token)
-			}
-
-			// text after last capture
-			if (last_end < result[0].length)
-			{
-				let subtoken = new Token()
-				subtoken.content = t.code.slice(t.pos_char + last_end, t.pos_char + result[0].length)
-				token.tokens.push(subtoken)
-			}
-		}
-
-	}
+	if (result === null) return 0
 
 	increse_pos(t, result[0].length)
 
-	return token
+	if (captures === undefined)
+	{
+		/** @type {Token} */ let token = {
+			content: result[0],
+			scopes : pattern_scopes,
+		}
+		t.tokens[t.len] = token
+		t.len += 1
+		return 1
+	}
+
+	if (result.length === 1)
+	{
+		/** @type {Token} */ let token = {
+			content: result[0],
+			scopes : pattern_scopes,
+		}
+		if (captures[0] !== undefined) token.scopes.push(captures[0].name)
+		t.tokens[t.len] = token
+		t.len += 1
+		return 1
+	}
+
+	let tokens_count = 0
+	let last_end = 0
+	
+	for (let key = 1; key < result.length; key += 1)
+	{
+		let group   = result[key]
+		let indices = /** @type {RegExpIndicesArray} */(result.indices)[key]
+		if (indices === undefined) continue
+		let [pos, end] = indices
+
+		// text between captures
+		if (pos > last_end) {
+			/** @type {Token} */ let subtoken = {
+				content: t.code.slice(pos_token + last_end, pos_token + pos),
+				scopes : pattern_scopes,
+			}
+			t.tokens[t.len] = subtoken
+			t.len += 1
+			tokens_count += 1
+		}
+		last_end = end
+
+		// capture
+		/** @type {Token} */ let capture_token = {
+			content: group,
+			scopes : pattern_scopes,
+		}
+		let capture = captures[key]
+		if (capture !== undefined) capture_token.scopes = capture_token.scopes.concat(capture.name)
+		t.tokens[t.len] = capture_token
+		t.len += 1
+		tokens_count += 1
+	}
+
+	// text after last capture
+	if (last_end < result[0].length)
+	{
+		/** @type {Token} */ let subtoken = {
+			content: t.code.slice(pos_token + last_end, pos_token + result[0].length),
+			scopes : pattern_scopes,
+		}
+		t.tokens[t.len] = subtoken
+		t.len += 1
+		tokens_count += 1
+	}
+
+	return tokens_count
 }
 
 /**
  * @param   {Tokenizer} t
  * @param   {Pattern}   pattern
- * @returns {Token[]}   */
-function try_get_tokens(t, pattern)
+ * @param   {string[]}  parent_scopes
+ * @returns {number}    */
+function pattern_to_tokens(t, pattern, parent_scopes)
 {
-	/** @type {Token[]} */
-	let tokens = []
+	let pattern_scopes = pattern.name !== undefined
+		? [...parent_scopes, pattern.name]
+		: parent_scopes
 
 	switch (true) {
 	case pattern.match !== undefined:
 	{
 		let match = new RegExp(pattern.match, "yd")
-		let token = match_token_with_captures(t, match, pattern.captures, pattern.name)
-		if (token) tokens.push(token)
-		break
+		return match_token_with_captures(t, match, pattern.captures, pattern_scopes)
 	}
 	case pattern.begin !== undefined && pattern.end !== undefined:
 	{
-		let begin_pos = t.pos_char
-
+		// begin
 		let begin_match = new RegExp(pattern.begin, "yd")
-		let begin_token = match_token_with_captures(t, begin_match, pattern.beginCaptures, undefined)
-		if (begin_token === null) break
-
-		let pattern_token = new Token()
-		if (pattern.name) pattern_token.scope = pattern.name
-		tokens.push(pattern_token)
-		pattern_token.tokens.push(begin_token)
+		let total_count = match_token_with_captures(t, begin_match, pattern.beginCaptures, pattern_scopes)
+		if (total_count === 0) return 0
 
 		let end_match = new RegExp(pattern.end, "yd")
 		let patterns = pattern.patterns || []
 
-		loop: while (t.pos_char < t.code.length)
-		{
+		loop: while (t.pos_char < t.code.length) {
 			// end
-			let end_token = match_token_with_captures(t, end_match, pattern.endCaptures, undefined)
-			if (end_token) {
-				pattern_token.content = t.code.slice(begin_pos, t.pos_char)
-				pattern_token.tokens.push(end_token)
+			let count = match_token_with_captures(t, end_match, pattern.endCaptures, pattern_scopes)
+			if (count > 0) {
+				total_count += count
 				break loop
 			}
 
 			// patterns
 			for (let subpattern of patterns) {
-				let tokens = try_get_tokens(t, subpattern)
-				if (tokens.length > 0) {
-					pattern_token.tokens.push.apply(pattern_token.tokens, tokens)
+				let count = pattern_to_tokens(t, subpattern, pattern_scopes)
+				if (count > 0) {
+					total_count += count
 					continue loop
 				}
 			}
 
 			// text between patterns
-			let last_token = pattern_token.tokens[pattern_token.tokens.length-1]
-			if (last_token.scope !== "" || last_token.tokens.length > 0) {
-				last_token = new Token()
-				pattern_token.tokens.push(last_token)
+			let last_token = t.tokens[t.len-1]
+			if (last_token.scopes !== pattern_scopes) {
+				last_token = {content: "", scopes: pattern_scopes}
+				t.tokens[t.len] = last_token
+				t.len += 1
+				total_count += 1
 			}
 			last_token.content += t.code[t.pos_char]
 
 			increse_pos(t, 1)
 		}
 
-		break
+		return total_count
 	}
 	case pattern.include !== undefined:
 	{
 		let included = t.repo[pattern.include.substring(1)]
-		if (included) {
-			tokens.push.apply(tokens, try_get_tokens(t, included))
-		}
-		break
+		return included
+			? pattern_to_tokens(t, included, pattern_scopes)
+			: 0
 	}
 	case pattern.patterns !== undefined:
 	{
 		for (let subpattern of pattern.patterns) {
-			let subtokens = try_get_tokens(t, subpattern)
-			if (subtokens.length > 0) {
-				tokens.push.apply(tokens, subtokens)
-				break
-			}
+			let count = pattern_to_tokens(t, subpattern, pattern_scopes)
+			if (count > 0) return count
 		}
-		break
+		return 0
 	}
+	}
+
+	return 0
+}
+
+
+
+
+/**
+ * @typedef  {object     } Tokenizer2
+ * @property {string     } code
+ * @property {Repository } repo
+ * @property {Token[]    } tokens
+ * @property {number     } pos_char
+ * @property {number     } pos_line
+ * @property {string[]   } stack_scope
+ * @property {Pattern[][]} stack_patterns
+ * @property {number[]   } stack_pattern_idx
+ * @property {number     } stack_len
+ */
+
+/**
+ * @param   {string}  code 
+ * @param   {Grammar} grammar
+ * @returns {Token[]} */
+export function code_to_tokens2(code, grammar)
+{
+	/** @type {Tokenizer2} */ let t = {
+		code             : code,
+		repo             : grammar.repository,
+		tokens           : [],
+		pos_char         : 0,
+		pos_line         : 0,
+		stack_scope      : [grammar.scopeName],
+		stack_patterns   : [grammar.patterns],
+		stack_pattern_idx: [0],
+		stack_len        : 1
+	}
+
+	loop: while (t.pos_char < code.length)
+	{
+		let patterns    = t.stack_patterns   [t.stack_len-1]
+		let pattern_idx = t.stack_pattern_idx[t.stack_len-1]
+		t.stack_pattern_idx[t.stack_len-1] += 1
+
+		if (pattern_idx >= patterns.length) {
+			t.stack_len -= 1
+			continue loop
+		}
+
+		let pattern = patterns[pattern_idx]
+
+		switch (true) {
+		case pattern.match !== undefined:
+		{
+			let match = new RegExp(pattern.match, "yd")
+			let pattern_tokens = match_token_with_captures2(t, match, pattern.captures, pattern.name)
+			t.tokens.push.apply(t.tokens, pattern_tokens)
+			break
+		}
+		case pattern.begin !== undefined && pattern.end !== undefined:
+		{
+			break
+		}
+		case pattern.include !== undefined:
+		{
+			let included = t.repo[pattern.include.substring(1)]
+			if (included) {
+				t.stack_patterns   [t.stack_len] = [included]
+				t.stack_pattern_idx[t.stack_len] = 0
+				t.stack_len += 1
+			}
+			break
+		}
+		case pattern.patterns !== undefined:
+		{
+			t.stack_patterns   [t.stack_len] = pattern.patterns
+			t.stack_pattern_idx[t.stack_len] = 0
+			t.stack_len += 1
+			break
+		}
+		}
+	}
+}
+
+/**
+ * @param   {Tokenizer2}           t
+ * @param   {RegExp}               match
+ * @param   {Captures | undefined} captures
+ * @param   {string | undefined}   scope_name
+ * @returns {Token[]}              */
+function match_token_with_captures2(t, match, captures, scope_name)
+{
+	let pos_token = t.pos_char
+	match.lastIndex = pos_token - t.pos_line
+	let result = match.exec(t.code.slice(t.pos_line))
+	if (result === null) return []
+
+	increse_pos(t, result[0].length)
+
+	let pattern_scopes = t.stack_scope.slice(0, t.stack_len - 1)
+	if (scope_name) pattern_scopes.push(scope_name)
+
+	if (captures === undefined)
+	{
+		/** @type {Token} */ let token = {
+			content: result[0],
+			scopes : pattern_scopes,
+		}
+
+		return [token]
+	}
+
+	if (result.length === 1)
+	{
+		/** @type {Token} */ let token = {
+			content: result[0],
+			scopes : pattern_scopes,
+		}
+		if (captures[0] !== undefined) token.scopes.push(captures[0].name)
+
+		return [token]
+	}
+
+	/** @type {Token[]} */ let tokens = []
+	let last_end = 0
+	
+	for (let key = 1; key < result.length; key += 1)
+	{
+		let group   = result[key]
+		let indices = /** @type {RegExpIndicesArray} */(result.indices)[key]
+		if (indices === undefined) continue
+		let [pos, end] = indices
+
+		// text between captures
+		if (pos > last_end) {
+			/** @type {Token} */ let subtoken = {
+				content: t.code.slice(pos_token + last_end, pos_token + pos),
+				scopes : pattern_scopes,
+			}
+			tokens.push(subtoken)
+		}
+		last_end = end
+
+		// capture
+		/** @type {Token} */ let capture_token = {
+			content: group,
+			scopes : pattern_scopes,
+		}
+		let capture = captures[key]
+		if (capture !== undefined) capture_token.scopes = capture_token.scopes.concat(capture.name)
+		tokens.push(capture_token)
+	}
+
+	// text after last capture
+	if (last_end < result[0].length)
+	{
+		/** @type {Token} */ let subtoken = {
+			content: t.code.slice(pos_token + last_end, pos_token + result[0].length),
+			scopes : pattern_scopes,
+		}
+		tokens.push(subtoken)
 	}
 
 	return tokens
 }
-
