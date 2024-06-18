@@ -247,20 +247,16 @@ function json_to_pattern(json, repo_json, repo)
  */
 
 /**
- * @param {Tokenizer} t 
- * @param {number}    n 
+ * @param {Tokenizer} t
  */
-function increse_pos(t, n)
+function increment_pos(t)
 {
-	while (n > 0) {
-		if (t.code[t.pos_char] === "\n") {
-			t.pos_line = t.pos_char + 1
-			t.line     = t.code.slice(t.pos_line)
-		}
-
-		t.pos_char += 1
-		n -= 1
+	if (t.code[t.pos_char] === "\n") {
+		t.pos_line = t.pos_char + 1
+		t.line     = t.code.slice(t.pos_line)
 	}
+
+	t.pos_char += 1
 }
 
 /**
@@ -291,7 +287,7 @@ export function code_to_tokens(code, grammar)
 			}
 		}
 		
-		increse_pos(t, 1)
+		increment_pos(t)
 	}
 
 	return tokens.slice(0, t.len)
@@ -311,7 +307,7 @@ function match_tokens_with_captures(t, match, captures, parent_scopes, scope)
 	let result = match.exec(t.line)
 	if (result === null) return false
 
-	increse_pos(t, result[0].length)
+	t.pos_char += result[0].length
 
 	let pattern_scopes = scope !== null
 		? [...parent_scopes, scope]
@@ -442,7 +438,7 @@ function pattern_to_tokens(t, pattern, parent_scopes)
 		}
 		last_token.content += t.code[t.pos_char]
 
-		increse_pos(t, 1)
+		increment_pos(t)
 	}
 
 	return true
