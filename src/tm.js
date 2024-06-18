@@ -233,6 +233,7 @@ function json_to_pattern(json, repo_json, repo)
 /**
  * @typedef  {object}              Tokenizer
  * @property {string}              code
+ * @property {string}              line
  * @property {number}              pos_char
  * @property {number}              pos_line
  * @property {{[_:number]: Token}} tokens // preallocated array
@@ -254,6 +255,7 @@ function increse_pos(t, n)
 	while (n > 0) {
 		if (t.code[t.pos_char] === "\n") {
 			t.pos_line = t.pos_char + 1
+			t.line     = t.code.slice(t.pos_line)
 		}
 
 		t.pos_char += 1
@@ -272,6 +274,7 @@ export function code_to_tokens(code, grammar)
 	/** @type {Tokenizer} */
 	let t = {
 		code    : code,
+		line    : code,
 		pos_char: 0,
 		pos_line: 0,
 		tokens  : tokens,
@@ -305,7 +308,7 @@ function match_tokens_with_captures(t, match, captures, parent_scopes, scope)
 {
 	let pos_token = t.pos_char
 	match.lastIndex = pos_token - t.pos_line
-	let result = match.exec(t.code.slice(t.pos_line))
+	let result = match.exec(t.line)
 	if (result === null) return false
 
 	increse_pos(t, result[0].length)
