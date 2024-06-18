@@ -313,7 +313,7 @@ function pattern_to_tokens(t, pattern, parent_scopes)
 		: parent_scopes
 
 	match_captures(t, begin_result, pattern.begin_captures, pattern_scopes)
-	t.pos_char += begin_result[0].length
+	increase_pos(t, begin_result[0].length)
 
 	// no end
 	if (pattern.end_match === null) {
@@ -328,7 +328,7 @@ function pattern_to_tokens(t, pattern, parent_scopes)
 		if (end_result !== null)
 		{
 			match_captures(t, end_result, pattern.end_captures, pattern_scopes)
-			t.pos_char += end_result[0].length
+			increase_pos(t, end_result[0].length)
 			break loop
 		}
 
@@ -369,6 +369,19 @@ function increment_pos(t, scopes)
 	}
 
 	t.pos_char += 1
+}
+
+/**
+ * @param   {Tokenizer} t
+ * @param   {number}    n
+ * @returns {void}      */
+function increase_pos(t, n)
+{
+	t.pos_char += n
+	if (t.code[t.pos_char-1] === "\n") {
+		t.pos_line = t.pos_char
+		t.line     = t.code.slice(t.pos_line)
+	}
 }
 
 /**
