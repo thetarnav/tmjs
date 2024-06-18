@@ -419,7 +419,9 @@ function match_captures(t, result, captures, pattern_scopes)
 		return
 	}
 
-	let last_end = result.index
+	// line-relative
+	let last_end  = result.index
+	let match_end = result.index + result[0].length
 	
 	for (let key = 1; key < result.length; key += 1)
 	{
@@ -427,6 +429,11 @@ function match_captures(t, result, captures, pattern_scopes)
 		let indices = /** @type {RegExpIndicesArray} */(result.indices)[key]
 		if (indices === undefined) continue
 		let [pos, end] = indices
+
+		// look ahead
+		if (end > match_end) {
+			break
+		}
 
 		// text between captures
 		if (pos > last_end) {
@@ -446,10 +453,10 @@ function match_captures(t, result, captures, pattern_scopes)
 	}
 
 	// text after last capture
-	if (last_end < result.index + result[0].length)
+	if (last_end < match_end)
 	{
 		t.tokens[t.len++] = {
-			content: t.code.slice(t.pos_line + last_end, t.pos_line + result.index + result[0].length),
+			content: t.code.slice(t.pos_line + last_end, t.pos_line + match_end),
 			scopes : match_scopes,
 		}
 	}
