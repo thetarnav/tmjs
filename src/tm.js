@@ -275,16 +275,7 @@ export function code_to_tokens(code, grammar)
 			}
 		}
 
-		// text between patterns
-		let last_token = t.tokens[t.len-1]
-		if (last_token.scopes.length !== 1) {
-			last_token = {content: "", scopes: source_scopes}
-			t.tokens[t.len] = last_token
-			t.len += 1
-		}
-		last_token.content += t.code[t.pos_char]
-		
-		increment_pos(t)
+		increment_pos(t, source_scopes)
 	}
 
 	return tokens.slice(0, t.len)
@@ -351,26 +342,30 @@ function pattern_to_tokens(t, pattern, parent_scopes)
 			}
 		}
 
-		// text between patterns
-		let last_token = t.tokens[t.len-1]
-		if (last_token.scopes[last_token.scopes.length-1] !== pattern_scopes[pattern_scopes.length-1]) {
-			last_token = {content: "", scopes: pattern_scopes}
-			t.tokens[t.len] = last_token
-			t.len += 1
-		}
-		last_token.content += t.code[t.pos_char]
-
-		increment_pos(t)
+		increment_pos(t, pattern_scopes)
 	}
 
 	return true
 }
 
 /**
- * @param {Tokenizer} t
- */
-function increment_pos(t)
+ * @param   {Tokenizer} t
+ * @param   {string[]}  scopes
+ * @returns {void}      */
+function increment_pos(t, scopes)
 {
+	// token for skipped text
+	let last_token = t.tokens[t.len-1]
+	if (last_token.scopes !== scopes) {
+		t.tokens[t.len++] = {
+			content: t.code[t.pos_char],
+			scopes : scopes,
+		}
+	} else {
+		last_token.content += t.code[t.pos_char]
+	}
+
+	// new line pos
 	if (t.code[t.pos_char] === "\n") {
 		t.pos_line = t.pos_char + 1
 		t.line     = t.code.slice(t.pos_line)
@@ -387,30 +382,31 @@ function increment_pos(t)
  * @returns {void}            */
 function match_captures(t, result, captures, pattern_scopes)
 {
+	if (result[0].length === 0) return
+
 	if (captures == null)
 	{
-		/** @type {Token} */ let token = {
+		t.tokens[t.len++] = {
 			content: result[0],
 			scopes : pattern_scopes,
 		}
-		t.tokens[t.len] = token
-		t.len += 1
 		return
 	}
+
+	// capture 0 is the whole match
+	let match_scopes = pattern_scopes
+	if (captures[0] !== undefined) match_scopes = [...match_scopes, captures[0].name]
 
 	if (result.length === 1)
 	{
-		/** @type {Token} */ let token = {
+		t.tokens[t.len++] = {
 			content: result[0],
-			scopes : pattern_scopes,
+			scopes : match_scopes,
 		}
-		if (captures[0] !== undefined) token.scopes = [...token.scopes, captures[0].name]
-		t.tokens[t.len] = token
-		t.len += 1
 		return
 	}
 
-	let last_end = 0
+	let last_end = result.index
 	
 	for (let key = 1; key < result.length; key += 1)
 	{
@@ -421,34 +417,27 @@ function match_captures(t, result, captures, pattern_scopes)
 
 		// text between captures
 		if (pos > last_end) {
-			/** @type {Token} */ let subtoken = {
+			t.tokens[t.len++] = {
 				content: t.code.slice(t.pos_char + last_end, t.pos_char + pos),
-				scopes : pattern_scopes,
+				scopes : match_scopes,
 			}
-			t.tokens[t.len] = subtoken
-			t.len += 1
 		}
 		last_end = end
 
 		// capture
-		/** @type {Token} */ let capture_token = {
-			content: group,
-			scopes : pattern_scopes,
-		}
 		let capture = captures[key]
-		if (capture !== undefined) capture_token.scopes = [...capture_token.scopes, capture.name]
-		t.tokens[t.len] = capture_token
-		t.len += 1
+		t.tokens[t.len++] = {
+			content: group,
+			scopes : capture !== undefined ? [...match_scopes, capture.name] : match_scopes,
+		}
 	}
 
 	// text after last capture
-	if (last_end < result[0].length)
+	if (last_end < result[0].length + result.index)
 	{
-		/** @type {Token} */ let subtoken = {
+		t.tokens[t.len++] = {
 			content: t.code.slice(t.pos_char + last_end, t.pos_char + result[0].length),
-			scopes : pattern_scopes,
+			scopes : match_scopes,
 		}
-		t.tokens[t.len] = subtoken
-		t.len += 1
 	}
 }
