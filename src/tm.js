@@ -352,14 +352,16 @@ function pattern_to_tokens(t, pattern, parent_scopes)
 function increment_pos(t, scopes)
 {
 	// token for skipped text
-	let last_token = t.tokens[t.len-1]
-	if (last_token.scopes !== scopes) {
-		t.tokens[t.len++] = {
-			content: t.code[t.pos_char],
-			scopes : scopes,
+	if (t.len > 0) {
+		let last_token = t.tokens[t.len-1]
+		if (last_token.scopes !== scopes) {
+			t.tokens[t.len++] = {
+				content: t.code[t.pos_char],
+				scopes : scopes,
+			}
+		} else {
+			last_token.content += t.code[t.pos_char]
 		}
-	} else {
-		last_token.content += t.code[t.pos_char]
 	}
 
 	// new line pos
