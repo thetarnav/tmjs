@@ -439,3 +439,71 @@ function match_captures(t, result, captures, pattern_scopes)
 		}
 	}
 }
+
+/**
+ * @typedef  {object}            Theme_Item
+ * @property {string[] | string} scope
+ * @property {Theme_Settings}    settings
+ */
+
+/**
+ * @typedef  {object} Theme_Settings
+ * @property {string} [foreground]
+ * @property {string} [background]
+ * @property {string} [fontStyle]
+ */
+
+/**
+ * @param   {string}  expected
+ * @param   {string}  actual
+ * @returns {boolean} greater then or equal */
+function match_scope(expected, actual) {
+	if (expected.length === actual.length) {
+		return expected === actual
+	}
+	if (expected.length < actual.length) {
+		return actual.startsWith(expected) && actual[expected.length] === "."
+	}
+	return false
+}
+
+/**
+ * @param {Token}        token
+ * @param {Theme_Item[]} theme
+ * @returns {Theme_Settings} */
+export function match_token_theme(token, theme)
+{
+	let scopes = token.scopes
+	/** @type {Theme_Settings} */ let settings = {}
+
+	for (let i = scopes.length - 1; i >= 0; i -= 1)
+	{
+		let scope = scopes[i]
+		
+		for (let item of theme)
+		{
+			if (typeof item.scope === "string") {
+				if (match_scope(item.scope, scope)) {
+					if (!("foreground" in settings)) settings.foreground = item.settings.foreground
+					if (!("background" in settings)) settings.background = item.settings.background
+					if (!("fontStyle"  in settings)) settings.fontStyle  = item.settings.fontStyle
+					break
+				}
+			} else {
+				if (!Array.isArray(item.scope)) {
+					continue
+				}
+				for (let scope_item of item.scope) {
+					if (match_scope(scope_item, scope)) {
+						if (!("foreground" in settings)) settings.foreground = item.settings.foreground
+						if (!("background" in settings)) settings.background = item.settings.background
+						if (!("fontStyle"  in settings)) settings.fontStyle  = item.settings.fontStyle
+						break
+					}
+				}
+			}
+		}
+	}
+
+	return settings
+}
