@@ -268,6 +268,7 @@ export function code_to_tokens(code, grammar)
 
 	loop: while (t.pos_char < t.code.length)
 	{
+		// patterns
 		for (const pattern of grammar.patterns) {
 			if (pattern_to_tokens(t, pattern, source_scopes)) {
 				continue loop
@@ -287,6 +288,82 @@ export function code_to_tokens(code, grammar)
 	}
 
 	return tokens.slice(0, t.len)
+}
+
+/**
+ * @param   {Tokenizer} t
+ * @param   {Pattern}   pattern
+ * @param   {string[]}  parent_scopes
+ * @returns {boolean}   success */
+function pattern_to_tokens(t, pattern, parent_scopes)
+{
+	// only patterns
+	if (pattern.begin_match === null)
+	{
+		let pattern_scopes = pattern.name !== null
+			? [...parent_scopes, pattern.name]
+			: parent_scopes
+
+		for (let subpattern of pattern.patterns) {
+			if (pattern_to_tokens(t, subpattern, pattern_scopes)) {
+				return true
+			}
+		}
+		return false
+	}
+
+
+	// begin
+	pattern.begin_match.lastIndex = t.pos_char - t.pos_line
+	let begin_result = pattern.begin_match.exec(t.line)
+	if (begin_result === null) {
+		return false
+	}
+
+	let pattern_scopes = pattern.name !== null
+		? [...parent_scopes, pattern.name]
+		: parent_scopes
+
+	match_captures(t, begin_result, pattern.begin_captures, pattern_scopes)
+	t.pos_char += begin_result[0].length
+
+	// no end
+	if (pattern.end_match === null) {
+		return true
+	}
+
+	loop: while (t.pos_char < t.code.length)
+	{
+		// end
+		pattern.end_match.lastIndex = t.pos_char - t.pos_line
+		let end_result = pattern.end_match.exec(t.line)
+		if (end_result !== null)
+		{
+			match_captures(t, end_result, pattern.end_captures, pattern_scopes)
+			t.pos_char += end_result[0].length
+			break loop
+		}
+
+		// patterns
+		for (let subpattern of pattern.patterns) {
+			if (pattern_to_tokens(t, subpattern, pattern_scopes)) {
+				continue loop
+			}
+		}
+
+		// text between patterns
+		let last_token = t.tokens[t.len-1]
+		if (last_token.scopes[last_token.scopes.length-1] !== pattern_scopes[pattern_scopes.length-1]) {
+			last_token = {content: "", scopes: pattern_scopes}
+			t.tokens[t.len] = last_token
+			t.len += 1
+		}
+		last_token.content += t.code[t.pos_char]
+
+		increment_pos(t)
+	}
+
+	return true
 }
 
 /**
@@ -374,80 +451,4 @@ function match_captures(t, result, captures, pattern_scopes)
 		t.tokens[t.len] = subtoken
 		t.len += 1
 	}
-}
-
-/**
- * @param   {Tokenizer} t
- * @param   {Pattern}   pattern
- * @param   {string[]}  parent_scopes
- * @returns {boolean}   success */
-function pattern_to_tokens(t, pattern, parent_scopes)
-{
-	// only patterns
-	if (pattern.begin_match === null)
-	{
-		let pattern_scopes = pattern.name !== null
-			? [...parent_scopes, pattern.name]
-			: parent_scopes
-
-		for (let subpattern of pattern.patterns) {
-			if (pattern_to_tokens(t, subpattern, pattern_scopes)) {
-				return true
-			}
-		}
-		return false
-	}
-
-
-	// begin
-	pattern.begin_match.lastIndex = t.pos_char - t.pos_line
-	let begin_result = pattern.begin_match.exec(t.line)
-	if (begin_result === null) {
-		return false
-	}
-
-	let pattern_scopes = pattern.name !== null
-		? [...parent_scopes, pattern.name]
-		: parent_scopes
-
-	match_captures(t, begin_result, pattern.begin_captures, pattern_scopes)
-	t.pos_char += begin_result[0].length
-
-	// no end
-	if (pattern.end_match === null) {
-		return true
-	}
-
-	loop: while (t.pos_char < t.code.length)
-	{
-		// end
-		pattern.end_match.lastIndex = t.pos_char - t.pos_line
-		let end_result = pattern.end_match.exec(t.line)
-		if (end_result !== null)
-		{
-			match_captures(t, end_result, pattern.end_captures, pattern_scopes)
-			t.pos_char += end_result[0].length
-			break loop
-		}
-
-		// patterns
-		for (let subpattern of pattern.patterns) {
-			if (pattern_to_tokens(t, subpattern, pattern_scopes)) {
-				continue loop
-			}
-		}
-
-		// text between patterns
-		let last_token = t.tokens[t.len-1]
-		if (last_token.scopes[last_token.scopes.length-1] !== pattern_scopes[pattern_scopes.length-1]) {
-			last_token = {content: "", scopes: pattern_scopes}
-			t.tokens[t.len] = last_token
-			t.len += 1
-		}
-		last_token.content += t.code[t.pos_char]
-
-		increment_pos(t)
-	}
-
-	return true
 }
