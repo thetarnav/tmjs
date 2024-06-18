@@ -294,25 +294,13 @@ export function code_to_tokens(code, grammar)
 }
 
 /**
- * @param   {Tokenizer} t
- * @param   {RegExp}    match
- * @param   {Captures?} captures
- * @param   {string[]}  parent_scopes
- * @param   {string?}   scope
- * @returns {boolean}   success */
-function match_tokens_with_captures(t, match, captures, parent_scopes, scope)
+ * @param   {Tokenizer}       t
+ * @param   {RegExpExecArray} result
+ * @param   {Captures?}       captures
+ * @param   {string[]}        pattern_scopes
+ * @returns {void}            */
+function match_captures(t, result, captures, pattern_scopes)
 {
-	let pos_token = t.pos_char
-	match.lastIndex = pos_token - t.pos_line
-	let result = match.exec(t.line)
-	if (result === null) return false
-
-	t.pos_char += result[0].length
-
-	let pattern_scopes = scope !== null
-		? [...parent_scopes, scope]
-		: parent_scopes
-
 	if (captures == null)
 	{
 		/** @type {Token} */ let token = {
@@ -321,7 +309,7 @@ function match_tokens_with_captures(t, match, captures, parent_scopes, scope)
 		}
 		t.tokens[t.len] = token
 		t.len += 1
-		return true
+		return
 	}
 
 	if (result.length === 1)
@@ -333,7 +321,7 @@ function match_tokens_with_captures(t, match, captures, parent_scopes, scope)
 		if (captures[0] !== undefined) token.scopes = [...token.scopes, captures[0].name]
 		t.tokens[t.len] = token
 		t.len += 1
-		return true
+		return
 	}
 
 	let last_end = 0
@@ -348,7 +336,7 @@ function match_tokens_with_captures(t, match, captures, parent_scopes, scope)
 		// text between captures
 		if (pos > last_end) {
 			/** @type {Token} */ let subtoken = {
-				content: t.code.slice(pos_token + last_end, pos_token + pos),
+				content: t.code.slice(t.pos_char + last_end, t.pos_char + pos),
 				scopes : pattern_scopes,
 			}
 			t.tokens[t.len] = subtoken
@@ -371,14 +359,12 @@ function match_tokens_with_captures(t, match, captures, parent_scopes, scope)
 	if (last_end < result[0].length)
 	{
 		/** @type {Token} */ let subtoken = {
-			content: t.code.slice(pos_token + last_end, pos_token + result[0].length),
+			content: t.code.slice(t.pos_char + last_end, t.pos_char + result[0].length),
 			scopes : pattern_scopes,
 		}
 		t.tokens[t.len] = subtoken
 		t.len += 1
 	}
-
-	return true
 }
 
 /**
@@ -389,7 +375,8 @@ function match_tokens_with_captures(t, match, captures, parent_scopes, scope)
 function pattern_to_tokens(t, pattern, parent_scopes)
 {
 	// only patterns
-	if (pattern.begin_match === null) {
+	if (pattern.begin_match === null)
+	{
 		let pattern_scopes = pattern.name !== null
 			? [...parent_scopes, pattern.name]
 			: parent_scopes
@@ -402,23 +389,35 @@ function pattern_to_tokens(t, pattern, parent_scopes)
 		return false
 	}
 
-	// begin
-	if (!match_tokens_with_captures(t, pattern.begin_match, pattern.begin_captures, parent_scopes, pattern.name)) {
-		return false
-	}
 
-	if (pattern.end_match === null) {
-		// no end
-		return true
+	// begin
+	pattern.begin_match.lastIndex = t.pos_char - t.pos_line
+	let begin_result = pattern.begin_match.exec(t.line)
+	if (begin_result === null) {
+		return false
 	}
 
 	let pattern_scopes = pattern.name !== null
 		? [...parent_scopes, pattern.name]
 		: parent_scopes
 
-	loop: while (t.pos_char < t.code.length) {
+	match_captures(t, begin_result, pattern.begin_captures, pattern_scopes)
+	t.pos_char += begin_result[0].length
+
+	// no end
+	if (pattern.end_match === null) {
+		return true
+	}
+
+	loop: while (t.pos_char < t.code.length)
+	{
 		// end
-		if (match_tokens_with_captures(t, pattern.end_match, pattern.end_captures, parent_scopes, pattern.name)) {
+		pattern.end_match.lastIndex = t.pos_char - t.pos_line
+		let end_result = pattern.end_match.exec(t.line)
+		if (end_result !== null)
+		{
+			match_captures(t, end_result, pattern.end_captures, pattern_scopes)
+			t.pos_char += end_result[0].length
 			break loop
 		}
 
