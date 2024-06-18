@@ -431,7 +431,7 @@ function match_captures(t, result, captures, pattern_scopes)
 		// text between captures
 		if (pos > last_end) {
 			t.tokens[t.len++] = {
-				content: t.code.slice(t.pos_char + last_end, t.pos_char + pos),
+				content: t.code.slice(t.pos_line + last_end, t.pos_line + pos),
 				scopes : match_scopes,
 			}
 		}
@@ -446,10 +446,10 @@ function match_captures(t, result, captures, pattern_scopes)
 	}
 
 	// text after last capture
-	if (last_end < result[0].length + result.index)
+	if (last_end < result.index + result[0].length)
 	{
 		t.tokens[t.len++] = {
-			content: t.code.slice(t.pos_char + last_end, t.pos_char + result[0].length),
+			content: t.code.slice(t.pos_line + last_end, t.pos_line + result.index + result[0].length),
 			scopes : match_scopes,
 		}
 	}
