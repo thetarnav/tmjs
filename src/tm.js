@@ -273,6 +273,15 @@ export function code_to_tokens(code, grammar)
 				continue loop
 			}
 		}
+
+		// text between patterns
+		let last_token = t.tokens[t.len-1]
+		if (last_token.scopes.length !== 1) {
+			last_token = {content: "", scopes: source_scopes}
+			t.tokens[t.len] = last_token
+			t.len += 1
+		}
+		last_token.content += t.code[t.pos_char]
 		
 		increment_pos(t)
 	}
