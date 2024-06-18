@@ -252,8 +252,8 @@ function json_to_pattern(json, repo_json, repo)
  * @returns {Token[]} */
 export function code_to_tokens(code, grammar)
 {
-	/** @type {Token[]} */ let tokens = new Array(code.length)
-
+	/** @type {Token[]}  */ let tokens = new Array(code.length)
+	/** @type {string[]} */ let source_scopes = [grammar.scope]
 	/** @type {Tokenizer} */
 	let t = {
 		code    : code,
@@ -264,11 +264,8 @@ export function code_to_tokens(code, grammar)
 		len     : 0,
 	}
 
-	/** @type {string[]} */ let source_scopes = [grammar.scope]
-
 	loop: while (t.pos_char < t.code.length)
 	{
-		// patterns
 		for (const pattern of grammar.patterns) {
 			if (pattern_to_tokens(t, pattern, source_scopes)) {
 				continue loop
@@ -394,8 +391,9 @@ function match_captures(t, result, captures, pattern_scopes)
 	}
 
 	// capture 0 is the whole match
-	let match_scopes = pattern_scopes
-	if (captures[0] !== undefined) match_scopes = [...match_scopes, captures[0].name]
+	let match_scopes = captures[0] !== undefined
+		? [...pattern_scopes, captures[0].name]
+		: pattern_scopes
 
 	if (result.length === 1)
 	{
