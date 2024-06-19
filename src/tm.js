@@ -1,3 +1,13 @@
+/*
+TODOs
+- [ ] selectors with ">"
+- [ ] selectors with "-"
+- [ ] patterns in captures
+- [ ] contentName
+- [ ] begin/while
+- [ ] bitset font style
+*/
+
 /**
  * @template T 
  * @typedef {{[key in string]?: T}} Dict
@@ -463,69 +473,114 @@ function match_captures(t, result, captures, pattern_scopes)
 }
 
 /**
- * @typedef  {object}            Theme_Item
- * @property {string[] | string} scope
- * @property {Theme_Settings}    settings
+ * @typedef  {object}              JSON_Theme_Item
+ * @property {string[] | string}   [scope]
+ * @property {JSON_Theme_Settings} settings
  */
 
 /**
- * @typedef  {object} Theme_Settings
+ * @typedef  {object}              Theme_Item
+ * @property {string[]}            selector_pieces
+ * @property {JSON_Theme_Settings} settings
+ */
+
+/**
+ * @param   {JSON_Theme_Item[]} json
+ * @param   {string}            source_scope
+ * @returns {Theme_Item[]}      */
+export function json_to_theme_items(json, source_scope)
+{
+	/** @type {Theme_Item[]} */
+	let items = new Array(json.length)
+	let len = 0
+
+	for (let item of json)
+	{
+		let selectors = Array.isArray(item.scope) ? item.scope : [item.scope ?? source_scope]
+
+		for (let selector of selectors)
+		{
+			items[len++] = {
+				selector_pieces: selector.split(/\s+/),
+				settings: item.settings,
+			}
+		}
+	}
+
+	return items
+}
+
+/**
+ * @typedef  {object} JSON_Theme_Settings
  * @property {string} [foreground]
  * @property {string} [background]
  * @property {string} [fontStyle]
  */
 
-/**
- * @param   {string}  expected
- * @param   {string}  actual
- * @returns {boolean} greater then or equal */
-function match_scope(expected, actual) {
-	if (expected.length === actual.length) {
-		return expected === actual
-	}
-	if (expected.length < actual.length) {
-		return actual.startsWith(expected) && actual[expected.length] === "."
-	}
-	return false
-}
+/** @typedef {Map<string, JSON_Theme_Settings>} Scope_Theme_Settings_Cache */
 
 /**
- * @param {Token}        token
- * @param {Theme_Item[]} theme
- * @returns {Theme_Settings} */
-export function match_token_theme(token, theme)
+ * @param   {Token}                      token
+ * @param   {Theme_Item[]}               theme
+ * @param   {Scope_Theme_Settings_Cache} cache
+ * @returns {JSON_Theme_Settings}        */
+export function match_token_theme(token, theme, cache)
 {
-	let scopes = token.scopes
-	/** @type {Theme_Settings} */ let settings = {}
+	let cache_string = token.scopes.join(" ")
+	let cached = cache.get(cache_string)
+	if (cached !== undefined) {
+		return cached
+	}
 
-	for (let i = scopes.length - 1; i >= 0; i -= 1)
+	/** @type {JSON_Theme_Settings} */ let settings = {}
+
+	let specificity_foreground = 0
+	let specificity_background = 0
+	let specificity_font_style = 0
+
+	theme_loop:
+	for (let item of theme)
 	{
-		let scope = scopes[i]
-		
-		for (let item of theme)
+		let scope_idx = token.scopes.length-1
+		let specificity = 0
+
+		selector_loop:
+		for (let i = item.selector_pieces.length-1; i >= 0; i -= 1)
 		{
-			if (typeof item.scope === "string") {
-				if (match_scope(item.scope, scope)) {
-					if (!("foreground" in settings)) settings.foreground = item.settings.foreground
-					if (!("background" in settings)) settings.background = item.settings.background
-					if (!("fontStyle"  in settings)) settings.fontStyle  = item.settings.fontStyle
-					break
-				}
-			} else {
-				if (!Array.isArray(item.scope)) {
-					continue
-				}
-				for (let scope_item of item.scope) {
-					if (match_scope(scope_item, scope)) {
-						if (!("foreground" in settings)) settings.foreground = item.settings.foreground
-						if (!("background" in settings)) settings.background = item.settings.background
-						if (!("fontStyle"  in settings)) settings.fontStyle  = item.settings.fontStyle
-						break
-					}
+			let selector_scope = item.selector_pieces[i]
+			
+			while (scope_idx >= 0)
+			{
+				let scope = token.scopes[scope_idx--]
+				if (scope.startsWith(selector_scope) && (
+					scope.length === selector_scope.length ||
+					scope[selector_scope.length] === "."
+				)) {
+					specificity += (scope_idx+2) * 10 * selector_scope.length
+					continue selector_loop
 				}
 			}
+
+			// not found
+			continue theme_loop
 		}
+
+		// found
+		if (specificity > specificity_foreground && "foreground" in item.settings) {
+			settings.foreground    = item.settings.foreground
+			specificity_foreground = specificity
+		}
+		if (specificity > specificity_background && "background" in item.settings) {
+			settings.background    = item.settings.background
+			specificity_background = specificity
+		}
+		if (specificity > specificity_font_style && "fontStyle" in item.settings) {
+			settings.fontStyle     = item.settings.fontStyle
+			specificity_font_style = specificity
+		}
+		continue theme_loop
 	}
 
+	cache.set(cache_string, settings)
 	return settings
 }

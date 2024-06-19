@@ -71,10 +71,14 @@ async function update() {
 	
 		/** @type {HTMLElement[]} */
 		let elements = new Array(tokens.length)
+		/** @type {tm.Scope_Theme_Settings_Cache} */
+		let settings_cache = new Map()
+
+		let theme_items = tm.json_to_theme_items(theme.tokenColors || [], grammar.scope)
 	
 		for (let i = 0; i < tokens.length; i += 1) {
 			let token = tokens[i]
-			let settings = tm.match_token_theme(token, theme.tokenColors)
+			let settings = tm.match_token_theme(token, theme_items, settings_cache)
 	
 			let token_el = document.createElement("span")
 			token_el.className = "token"
@@ -83,7 +87,11 @@ async function update() {
 			token_el.textContent = token.content
 			if (settings.foreground) token_el.style.color           = settings.foreground
 			if (settings.background) token_el.style.backgroundColor = settings.background
-			if (settings.fontStyle ) token_el.style.fontStyle       = settings.fontStyle
+			if (settings.fontStyle) {
+				if (settings.fontStyle === "italic")    token_el.style.fontStyle      = "italic"
+				if (settings.fontStyle === "bold")      token_el.style.fontWeight     = "bold"
+				if (settings.fontStyle === "underline") token_el.style.textDecoration = "underline"
+			}
 	
 			/*
 			Skip first because it's always the root scope
@@ -191,46 +199,47 @@ async function update() {
 		shiki_el.append(...elements_lines)
 		root.innerHTML = ""
 		root.append(shiki_el)
+
+		/*
+		Show hovered token scope
+		*/
+		const tooltip_el = document.createElement("div")
+		tooltip_el.className = "scope-tooltip"
+		root.append(tooltip_el)
+	
+		/** @type {HTMLElement | null} */
+		let last_scope_el = null
+		shiki_el.addEventListener("mousemove", e => {
+			const target = e.target
+			if (!(target instanceof HTMLElement)) {
+				tooltip_el.style.visibility = "hidden"
+				last_scope_el = null
+				return
+			}
+	
+			if (target !== last_scope_el) {
+				const scope = scopes_map.get(target)
+				if (!scope) {
+					tooltip_el.style.visibility = "hidden"
+					last_scope_el = null
+					return
+				}
+	
+				last_scope_el = target
+				tooltip_el.textContent = scope
+				tooltip_el.style.visibility = "visible"
+			}
+	
+			tooltip_el.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`
+		})
+	
+		shiki_el.addEventListener("mouseleave", () => {
+			tooltip_el.style.visibility = "hidden"
+			last_scope_el = null
+		})
 	}
 
 
-	// /*
-	// Show hovered token scope
-	// */
-	// const tooltip_el = document.createElement("div")
-	// tooltip_el.className = "scope-tooltip"
-	// root.append(tooltip_el)
-
-	// /** @type {HTMLElement | null} */
-	// let last_scope_el = null
-	// shiki_el.addEventListener("mousemove", e => {
-	// 	const target = e.target
-	// 	if (!(target instanceof HTMLElement)) {
-	// 		tooltip_el.style.visibility = "hidden"
-	// 		last_scope_el = null
-	// 		return
-	// 	}
-
-	// 	if (target !== last_scope_el) {
-	// 		const scope = scopes_map.get(target)
-	// 		if (!scope) {
-	// 			tooltip_el.style.visibility = "hidden"
-	// 			last_scope_el = null
-	// 			return
-	// 		}
-
-	// 		last_scope_el = target
-	// 		tooltip_el.textContent = scope
-	// 		tooltip_el.style.visibility = "visible"
-	// 	}
-
-	// 	tooltip_el.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`
-	// })
-
-	// shiki_el.addEventListener("mouseleave", () => {
-	// 	tooltip_el.style.visibility = "hidden"
-	// 	last_scope_el = null
-	// })
 
 	loading_indicator.style.display = "none"
 }
