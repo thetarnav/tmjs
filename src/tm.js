@@ -10,12 +10,12 @@ TODOs
 */
 
 /**
- * @template T 
+ * @template T
  * @typedef {{[key in string]?: T}} Dict
  */
 
 /**
- * @template T 
+ * @template T
  * @typedef {T | T[]} Many
  */
 
@@ -63,11 +63,11 @@ TODOs
  * @property {Pattern[]} patterns
  */
 
-/** 
+/**
  * @typedef {Dict<JSON_Capture>} JSON_Captures
  */
 
-/** 
+/**
  * @typedef {Dict<Capture>} Captures
  */
 
@@ -82,7 +82,7 @@ TODOs
  */
 
 /**
- * @param   {unknown | JSON_Grammar} grammar 
+ * @param   {unknown | JSON_Grammar} grammar
  * @returns {grammar is JSON_Grammar} */
 export function validate_json_grammar(grammar) {
 	return (
@@ -96,7 +96,7 @@ export function validate_json_grammar(grammar) {
 }
 
 /**
- * @param   {unknown | JSON_Pattern}  pattern 
+ * @param   {unknown | JSON_Pattern}  pattern
  * @returns {pattern is JSON_Pattern} */
 export function validate_json_pattern(pattern) {
 	return (
@@ -114,7 +114,7 @@ export function validate_json_pattern(pattern) {
 }
 
 /**
- * @param   {unknown | JSON_Captures}   captures 
+ * @param   {unknown | JSON_Captures}   captures
  * @returns {captures is JSON_Captures} */
 export function validate_captures(captures) {
 	return (
@@ -125,7 +125,7 @@ export function validate_captures(captures) {
 }
 
 /**
- * @param {unknown | JSON_Capture} capture 
+ * @param {unknown | JSON_Capture} capture
  * @returns {capture is JSON_Capture}
  */
 export function validate_capture(capture) {
@@ -147,7 +147,7 @@ export function json_to_grammar(json)
 		scope   : json.scopeName,
 		patterns: [],
 	}
-	
+
 	for (const json_pattern of json.patterns) {
 		grammar.patterns.push(json_to_pattern(json_pattern, json.repository, repo))
 	}
@@ -256,7 +256,7 @@ function json_to_pattern(json, repo_json, repo)
 }
 
 /**
- * @param   {JSON_Captures} json 
+ * @param   {JSON_Captures} json
  * @returns {Captures}      */
 function json_to_captures(json)
 {
@@ -287,7 +287,7 @@ function json_to_captures(json)
  */
 
 /**
- * @param   {string}  code 
+ * @param   {string}  code
  * @param   {Grammar} grammar
  * @returns {Token[]} */
 export function code_to_tokens(code, grammar)
@@ -462,7 +462,7 @@ function match_captures(t, result, captures, pattern_scopes)
 	// line-relative
 	let last_end  = result.index
 	let match_end = result.index + result[0].length
-	
+
 	for (let key = 1; key < result.length; key += 1)
 	{
 		let group   = result[key]
@@ -580,7 +580,7 @@ export function match_token_theme(token, theme, cache)
 		for (let i = item.selector_pieces.length-1; i >= 0; i -= 1)
 		{
 			let selector_scope = item.selector_pieces[i]
-			
+
 			while (scope_idx >= 0)
 			{
 				let scope = token.scopes[scope_idx--]
