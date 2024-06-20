@@ -1,7 +1,7 @@
 /*
 TODOs
 - [x] spaces in name in grammars (multiple names)
-- [ ] selectors with ">"
+- [x] selectors with ">"
 - [ ] selectors with "-"
 - [ ] patterns in captures
 - [ ] contentName
@@ -512,7 +512,7 @@ function match_captures(t, result, captures, pattern_scopes)
 
 /**
  * @typedef  {object}              Theme_Item
- * @property {string[]}            selector_pieces
+ * @property {string[]}            selector
  * @property {JSON_Theme_Settings} settings
  */
 
@@ -530,10 +530,40 @@ export function json_to_theme_items(json, source_scope)
 	{
 		let selectors = Array.isArray(item.scope) ? item.scope : [item.scope ?? source_scope]
 
-		for (let selector of selectors)
+		for (let selector_raw of selectors)
 		{
+			/*
+			parse selector
+			
+			" source meta.block >   child.scope"
+			 v v v v v v v v v v v v v v v v
+			["source", "meta.block", ">", "child.scope"]
+
+			*/
+			/** @type {string[]} */ let selector = [""]
+			let is_space = false
+			
+			for (let char of selector_raw) {
+				switch (char) {
+				case ' ':
+					is_space = true
+					break
+				case '>':
+					selector.push(">", "")
+					is_space = false
+					break
+				default:
+					if (is_space && selector[selector.length-1] !== ">" && selector[selector.length-1] !== "") {
+						selector.push("")
+					}
+					is_space = false
+					selector[selector.length-1] += char
+					break
+				}
+			}
+
 			items[len++] = {
-				selector_pieces: selector.split(/\s+/),
+				selector: selector,
 				settings: item.settings,
 			}
 		}
@@ -552,8 +582,8 @@ export function json_to_theme_items(json, source_scope)
 /** @typedef {Map<string, JSON_Theme_Settings>} Scope_Theme_Settings_Cache */
 
 /**
- * @param   {Token}                      token
- * @param   {Theme_Item[]}               theme
+ * @param   {Token} token
+ * @param   {Theme_Item[]} theme
  * @param   {Scope_Theme_Settings_Cache} cache
  * @returns {JSON_Theme_Settings}        */
 export function match_token_theme(token, theme, cache)
@@ -577,18 +607,40 @@ export function match_token_theme(token, theme, cache)
 		let specificity = 0
 
 		selector_loop:
-		for (let i = item.selector_pieces.length-1; i >= 0; i -= 1)
+		for (let i = item.selector.length-1; i >= 0; i--)
 		{
-			let selector_scope = item.selector_pieces[i]
+			let selector_part = item.selector[i]
+			
+			// direct child
+			if (selector_part === ">")
+			{
+				i--
+				if (scope_idx >= 0 && i >= 0)
+				{
+					selector_part = item.selector[i]
+					let scope = token.scopes[scope_idx]
+					scope_idx--
+					if (scope.startsWith(selector_part) && (
+						scope.length === selector_part.length ||
+						scope[selector_part.length] === "."
+					)) {
+						specificity += (scope_idx+2) * 10 * selector_part.length
+						continue selector_loop
+					}
+				}
+				// not found
+				continue theme_loop
+			}
 
 			while (scope_idx >= 0)
 			{
-				let scope = token.scopes[scope_idx--]
-				if (scope.startsWith(selector_scope) && (
-					scope.length === selector_scope.length ||
-					scope[selector_scope.length] === "."
+				let scope = token.scopes[scope_idx]
+				scope_idx--
+				if (scope.startsWith(selector_part) && (
+					scope.length === selector_part.length ||
+					scope[selector_part.length] === "."
 				)) {
-					specificity += (scope_idx+2) * 10 * selector_scope.length
+					specificity += (scope_idx+2) * 10 * selector_part.length
 					continue selector_loop
 				}
 			}

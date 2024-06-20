@@ -64,8 +64,9 @@ async function update() {
 			return
 		}
 	
-		let grammar = tm.json_to_grammar(lang)
-		let tokens = tm.code_to_tokens(code, grammar)
+		let grammar     = tm.json_to_grammar(lang)
+		let theme_items = tm.json_to_theme_items(theme.tokenColors || [], grammar.scope)
+		let tokens      = tm.code_to_tokens(code, grammar)
 	
 		const scopes_map = new Map()
 	
@@ -73,8 +74,6 @@ async function update() {
 		let elements = new Array(tokens.length)
 		/** @type {tm.Scope_Theme_Settings_Cache} */
 		let settings_cache = new Map()
-
-		let theme_items = tm.json_to_theme_items(theme.tokenColors || [], grammar.scope)
 	
 		for (let i = 0; i < tokens.length; i += 1) {
 			let token = tokens[i]
