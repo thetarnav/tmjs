@@ -1,5 +1,5 @@
-import * as shiki from "shiki"
-import getShikiWasm from 'shiki/wasm'
+// import * as shiki from "shiki"
+// import getShikiWasm from 'shiki/wasm'
 import * as tm from "./tm.js"
 
 import {WEB_SOCKET_PORT, THEME_JSON_WEBPATH, CODE_WEBPATH, LANG_WEBPATH} from "./constants.js"
@@ -113,8 +113,46 @@ async function update() {
 		shiki_el.append(...elements)
 		root.innerHTML = ""
 		root.append(shiki_el)
-	} else
-	{
+
+		/*
+		Show hovered token scope
+		*/
+		const tooltip_el = document.createElement("div")
+		tooltip_el.className = "scope-tooltip"
+		root.append(tooltip_el)
+	
+		/** @type {HTMLElement | null} */
+		let last_scope_el = null
+		shiki_el.addEventListener("mousemove", e => {
+			const target = e.target
+			if (!(target instanceof HTMLElement)) {
+				tooltip_el.style.visibility = "hidden"
+				last_scope_el = null
+				return
+			}
+	
+			if (target !== last_scope_el) {
+				const scope = scopes_map.get(target)
+				if (!scope) {
+					tooltip_el.style.visibility = "hidden"
+					last_scope_el = null
+					return
+				}
+	
+				last_scope_el = target
+				tooltip_el.textContent = scope
+				tooltip_el.style.visibility = "visible"
+			}
+	
+			tooltip_el.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`
+		})
+	
+		shiki_el.addEventListener("mouseleave", () => {
+			tooltip_el.style.visibility = "hidden"
+			last_scope_el = null
+		})
+	}
+	else {
 		const highlighter_promise = shiki.getHighlighterCore({
 			themes:   [theme_promise],
 			langs:    [lang_promise],
