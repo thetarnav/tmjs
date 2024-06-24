@@ -359,6 +359,7 @@
 				{
 					"name": "comment.line.double-slash.odin",
 					"begin": "//",
+					"beginCaptures": {"0": {"name": "punctuation.definition.comment.odin"}},
 					"end": "\n"
 				}
 			]
@@ -366,7 +367,9 @@
 		"block-comment": {
 			"name": "comment.block.odin",
 			"begin": "/\\*",
+			"beginCaptures": {"0": {"name": "punctuation.definition.comment.begin.odin"}},
 			"end": "\\*/",
+			"endCaptures": {"0": {"name": "punctuation.definition.comment.end.odin"}},
 			"patterns": [ { "include": "#block-comment" } ]
 		},
 		"type-name": {

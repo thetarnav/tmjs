@@ -607,19 +607,19 @@ export function match_token_theme(token, theme, cache)
 		let specificity = 0
 
 		selector_loop:
-		for (let i = item.selector.length-1; i >= 0; i--)
+		for (let i = item.selector.length-1; i >= 0; i -= 1)
 		{
 			let selector_part = item.selector[i]
 			
 			// direct child
 			if (selector_part === ">")
 			{
-				i--
+				i -= 1
 				if (scope_idx >= 0 && i >= 0)
 				{
 					selector_part = item.selector[i]
 					let scope = token.scopes[scope_idx]
-					scope_idx--
+					scope_idx -= 1
 					if (scope.startsWith(selector_part) && (
 						scope.length === selector_part.length ||
 						scope[selector_part.length] === "."
@@ -635,7 +635,7 @@ export function match_token_theme(token, theme, cache)
 			while (scope_idx >= 0)
 			{
 				let scope = token.scopes[scope_idx]
-				scope_idx--
+				scope_idx -= 1
 				if (scope.startsWith(selector_part) && (
 					scope.length === selector_part.length ||
 					scope[selector_part.length] === "."
