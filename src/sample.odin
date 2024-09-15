@@ -1,5 +1,13 @@
-//+build js
+#+build js wasm32, js wasm64p32, linux !arm32 !arm64
+#+private
+// hello
+#+lazy
+#+no-instrumentation
+#+ignore
 package sample
+
+//+my-comment
+#! this is also a comment btw
 
 import "core:fmt"
 import "base:intrinsics"
