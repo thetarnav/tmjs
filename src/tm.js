@@ -7,6 +7,7 @@ TODOs
 - [ ] contentName
 - [ ] begin/while
 - [ ] bitset font style
+- [x] tm regex does not includes newlines in `\s`
 */
 
 /**
@@ -156,10 +157,19 @@ export function json_to_grammar(json)
 }
 
 /**
- * @param   {JSON_Pattern}    json
- * @param   {JSON_Repository} repo_json
- * @param   {Repository}      repo
- * @returns {Pattern}        */
+@param   {string} str 
+@returns {RegExp}
+*/
+function string_match_to_regex(str) {
+	str = str.replaceAll("\\s", "[ \\t\\v\\f]") // tm regex does not includes newlines in \s
+	return new RegExp(str, "yd")
+}
+
+/**
+@param   {JSON_Pattern}    json
+@param   {JSON_Repository} repo_json
+@param   {Repository}      repo
+@returns {Pattern}        */
 function json_to_pattern(json, repo_json, repo)
 {
 	switch (true) {
@@ -167,7 +177,7 @@ function json_to_pattern(json, repo_json, repo)
 	{
 		/** @type {Pattern} */ let pattern = {
 			names         : json.name !== undefined ? json.name.split(" ") : [],
-			begin_match   : new RegExp(json.match, "yd"),
+			begin_match   : string_match_to_regex(json.match),
 			begin_captures: json.captures ? json_to_captures(json.captures) : null,
 			end_match     : null,
 			end_captures  : null,
@@ -179,9 +189,9 @@ function json_to_pattern(json, repo_json, repo)
 	{
 		/** @type {Pattern} */ let pattern = {
 			names         : json.name !== undefined ? json.name.split(" ") : [],
-			begin_match   : new RegExp(json.begin, "yd"),
+			begin_match   : string_match_to_regex(json.begin),
 			begin_captures: json.beginCaptures ? json_to_captures(json.beginCaptures) : null,
-			end_match     : new RegExp(json.end,   "yd"),
+			end_match     : string_match_to_regex(json.end),
 			end_captures  : json.endCaptures   ? json_to_captures(json.endCaptures)   : null,
 			patterns      : [],
 		}
