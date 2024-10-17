@@ -3,163 +3,171 @@ TODOs
 - [x] spaces in name in grammars (multiple names)
 - [x] selectors with ">"
 - [ ] selectors with "-"
+- [ ] selectors with ","
 - [ ] patterns in captures
-- [ ] contentName
+- [x] contentName
 - [ ] begin/while
+- [ ] including other langs
 - [ ] bitset font style
 - [x] tm regex does not includes newlines in `\s`
 */
 
-/**
- * @template T
- * @typedef {{[key in string]?: T}} Dict
- */
+export const URL_GRAMMAR_TYPESCRIPT = 'https://raw.githubusercontent.com/shikijs/textmate-grammars-themes/refs/heads/main/packages/tm-grammars/grammars/typescript.json'
 
 /**
- * @template T
- * @typedef {T | T[]} Many
- */
+ @template T
+ @typedef {{[key in string]?: T}} Dict
+*/
 
 /**
- * @typedef  {object}          JSON_Grammar
- * @property {string}          scopeName
- * @property {JSON_Pattern[]}  patterns
- * @property {JSON_Repository} repository
- */
+ @template T
+ @typedef {T | T[]} Many
+*/
 
 /**
- * @typedef  {object}    Grammar
- * @property {string}    scope
- * @property {Pattern[]} patterns
- */
+ @typedef  {object}          JSON_Grammar
+ @property {string}          scopeName
+ @property {JSON_Pattern[]}  patterns
+ @property {JSON_Repository} repository
+*/
 
 /**
- * @typedef {Dict<JSON_Pattern>} JSON_Repository
- */
+ @typedef  {object}    Grammar
+ @property {string}    scope
+ @property {Pattern[]} patterns
+*/
 
 /**
- * @typedef {Dict<Pattern>} Repository
- */
+ @typedef {Dict<JSON_Pattern>} JSON_Repository
+*/
 
 /**
- * @typedef  {object}         JSON_Pattern
- * @property {string}         [include]
- * @property {string}         [name]
- * @property {string}         [match]
- * @property {string}         [begin]
- * @property {string}         [end]
- * @property {JSON_Captures}  [captures]
- * @property {JSON_Captures}  [beginCaptures]
- * @property {JSON_Captures}  [endCaptures]
- * @property {JSON_Pattern[]} [patterns]
- */
+ @typedef {Dict<Pattern>} Repository
+*/
 
 /**
- * @typedef  {object}    Pattern
- * @property {string[]}  names
- * @property {RegExp?}   begin_match
- * @property {Captures?} begin_captures
- * @property {RegExp?}   end_match
- * @property {Captures?} end_captures
- * @property {Pattern[]} patterns
- */
+ @typedef  {object}         JSON_Pattern
+ @property {string}         [include]
+ @property {string}         [name]
+ @property {string}         [contentName]
+ @property {string}         [match]
+ @property {string}         [begin]
+ @property {string}         [end]
+ @property {JSON_Captures}  [captures]
+ @property {JSON_Captures}  [beginCaptures]
+ @property {JSON_Captures}  [endCaptures]
+ @property {JSON_Pattern[]} [patterns]
+*/
 
 /**
- * @typedef {Dict<JSON_Capture>} JSON_Captures
- */
+ @typedef  {object}    Pattern
+ @property {string[]}  names
+ @property {string[]}  content_names
+ @property {RegExp?}   begin_match
+ @property {Captures?} begin_captures
+ @property {RegExp?}   end_match
+ @property {Captures?} end_captures
+ @property {Pattern[]} patterns
+*/
 
 /**
- * @typedef {Dict<Capture>} Captures
- */
+ @typedef {Dict<JSON_Capture>} JSON_Captures
+*/
 
 /**
- * @typedef  {object} JSON_Capture
- * @property {string} name
- */
+ @typedef {Dict<Capture>} Captures
+*/
 
 /**
- * @typedef  {object}   Capture
- * @property {string[]} names
- */
+ @typedef  {object} JSON_Capture
+ @property {string} name
+*/
 
 /**
- * @param   {unknown | JSON_Grammar} grammar
- * @returns {grammar is JSON_Grammar} */
+ @typedef  {object}   Capture
+ @property {string[]} names
+*/
+
+/**
+ @param   {unknown | JSON_Grammar} grammar
+ @returns {grammar is JSON_Grammar} */
 export function validate_json_grammar(grammar) {
 	return (
-		grammar !== null &&
-		typeof grammar === "object" &&
+		grammar !== null && typeof grammar === "object" &&
 		"name"       in grammar && typeof grammar.name === "string" &&
 		"scopeName"  in grammar && typeof grammar.scopeName === "string" &&
-		"patterns"   in grammar && Array.isArray(grammar.patterns) && grammar.patterns.every(validate_json_pattern) &&
-		"repository" in grammar && typeof grammar.repository === "object" && grammar.repository !== null && Object.values(grammar.repository).every(validate_json_pattern)
+		"patterns"   in grammar && validate_array(grammar.patterns, validate_json_pattern) &&
+		"repository" in grammar && validate_dict(grammar.repository, validate_json_pattern)
 	)
 }
 
 /**
- * @param   {unknown | JSON_Pattern}  pattern
- * @returns {pattern is JSON_Pattern} */
+ @param   {unknown | JSON_Pattern}  pattern
+ @returns {pattern is JSON_Pattern} */
 export function validate_json_pattern(pattern) {
 	return (
-		pattern !== null &&
-		typeof pattern === "object" &&
-		(!("include"       in pattern) || typeof pattern.include === "string") &&
-		(!("match"         in pattern) || typeof pattern.match === "string") &&
-		(!("begin"         in pattern) || typeof pattern.begin === "string") &&
-		(!("end"           in pattern) || typeof pattern.end === "string") &&
-		(!("captures"      in pattern) || validate_captures(pattern.captures)) &&
-		(!("beginCaptures" in pattern) || validate_captures(pattern.beginCaptures)) &&
-		(!("endCaptures"   in pattern) || validate_captures(pattern.endCaptures)) &&
-		(!("patterns"      in pattern) || Array.isArray(pattern.patterns) && pattern.patterns.every(validate_json_pattern))
+		pattern !== null && typeof pattern === "object" &&
+		(!("name"          in pattern) || typeof pattern.name        === "string") &&
+		(!("contentName"   in pattern) || typeof pattern.contentName === "string") &&
+		(!("include"       in pattern) || typeof pattern.include     === "string") &&
+		(!("match"         in pattern) || typeof pattern.match       === "string") &&
+		(!("begin"         in pattern) || typeof pattern.begin       === "string") &&
+		(!("end"           in pattern) || typeof pattern.end         === "string") &&
+		(!("captures"      in pattern) || validate_dict(pattern.captures, validate_capture)) &&
+		(!("beginCaptures" in pattern) || validate_dict(pattern.beginCaptures, validate_capture)) &&
+		(!("endCaptures"   in pattern) || validate_dict(pattern.endCaptures, validate_capture)) &&
+		(!("patterns"      in pattern) || validate_array(pattern.patterns, validate_json_pattern))
 	)
 }
 
 /**
- * @param   {unknown | JSON_Captures}   captures
- * @returns {captures is JSON_Captures} */
-export function validate_captures(captures) {
+ @template T
+ @param   {unknown}                           value 
+ @param   {(v: unknown, i: number) => v is T} predicate
+ @returns {value is T[]}                      */
+function validate_array(value, predicate) {
 	return (
-		captures !== null &&
-		typeof captures === "object" &&
-		Object.values(captures).every(validate_capture)
+		Array.isArray(value) && value.every(predicate)
 	)
 }
 
 /**
- * @param {unknown | JSON_Capture} capture
- * @returns {capture is JSON_Capture}
- */
+ @template T
+ @param   {unknown}                value 
+ @param   {(v: unknown) => v is T} predicate
+ @returns {value is Dict<T>}       */
+function validate_dict(value, predicate) {
+	return (
+		typeof value === "object" && value !== null && Object.values(value).every(predicate)
+	)
+}
+
+/**
+ @param {unknown | JSON_Capture}    capture
+ @returns {capture is JSON_Capture} */
 export function validate_capture(capture) {
 	return (
-		capture !== null &&
-		typeof capture === "object" &&
+		capture !== null && typeof capture === "object" &&
 		"name" in capture && typeof capture.name === "string"
 	)
 }
 
 /**
- * @param   {JSON_Grammar} json
- * @returns {Grammar}      */
+ @param   {JSON_Grammar} json
+ @returns {Grammar}      */
 export function json_to_grammar(json)
 {
 	/** @type {Repository} */ let repo = {}
 
-	/** @type {Grammar} */ let grammar = {
+	return {
 		scope   : json.scopeName,
-		patterns: [],
+		patterns: json.patterns.map(p => json_to_pattern(p, json.repository, repo)),
 	}
-
-	for (const json_pattern of json.patterns) {
-		grammar.patterns.push(json_to_pattern(json_pattern, json.repository, repo))
-	}
-
-	return grammar
 }
 
 /**
 @param   {string} str 
-@returns {RegExp}
-*/
+@returns {RegExp} */
 function string_match_to_regex(str) {
 	str = str.replaceAll("\\s", "[ \\t\\v\\f]") // tm regex does not includes newlines in \s
 	return new RegExp(str, "yd")
@@ -172,140 +180,113 @@ function string_match_to_regex(str) {
 @returns {Pattern}        */
 function json_to_pattern(json, repo_json, repo)
 {
-	switch (true) {
-	case json.match !== undefined:
-	{
-		/** @type {Pattern} */ let pattern = {
-			names         : json.name !== undefined ? json.name.split(" ") : [],
-			begin_match   : string_match_to_regex(json.match),
-			begin_captures: json.captures ? json_to_captures(json.captures) : null,
-			end_match     : null,
-			end_captures  : null,
-			patterns      : [],
-		}
-		return pattern
-	}
-	case json.begin !== undefined && json.end !== undefined:
-	{
-		/** @type {Pattern} */ let pattern = {
-			names         : json.name !== undefined ? json.name.split(" ") : [],
-			begin_match   : string_match_to_regex(json.begin),
-			begin_captures: json.beginCaptures ? json_to_captures(json.beginCaptures) : null,
-			end_match     : string_match_to_regex(json.end),
-			end_captures  : json.endCaptures   ? json_to_captures(json.endCaptures)   : null,
-			patterns      : [],
-		}
-		if (json.patterns !== undefined) {
-			for (const sub_json of json.patterns) {
-				pattern.patterns.push(json_to_pattern(sub_json, repo_json, repo))
-			}
-		}
-		return pattern
-	}
-	case json.include !== undefined:
-	{
-		let patterns = repo[json.include]
-		if (patterns !== undefined) {
-			return patterns
-		}
-
-		/** @type {Pattern} */ let pattern = {
-			names         : [],
-			begin_match   : null,
-			begin_captures: null,
-			end_match     : null,
-			end_captures  : null,
-			patterns      : [],
-		}
-
-		if (json.include[0] !== "#") {
-			return pattern
-		}
-
-		let patterns_json = repo_json[json.include.slice(1)]
-		if (patterns_json === undefined) {
-			return pattern
-		}
-
-		repo[json.include] = pattern
-		let actual = json_to_pattern(patterns_json, repo_json, repo)
-		pattern.names          = actual.names
-		pattern.begin_match    = actual.begin_match
-		pattern.begin_captures = actual.begin_captures
-		pattern.end_match      = actual.end_match
-		pattern.end_captures   = actual.end_captures
-		pattern.patterns       = actual.patterns
-
-		return pattern
-	}
-	case json.patterns !== undefined:
-	{
-		/** @type {Pattern[]} */ let patterns = []
-		for (const sub_json of json.patterns) {
-			patterns.push(json_to_pattern(sub_json, repo_json, repo))
-		}
-		return {
-			names         : json.name !== undefined ? json.name.split(" ") : [],
-			begin_match   : null,
-			begin_captures: null,
-			end_match     : null,
-			end_captures  : null,
-			patterns      : patterns,
-		}
-	}
-	}
-
-	return {
+	/** @type {Pattern} */ let pattern = {
 		names         : [],
+		content_names : [],
 		begin_match   : null,
 		begin_captures: null,
 		end_match     : null,
 		end_captures  : null,
 		patterns      : [],
 	}
+	
+	switch (true) {
+	case json.match !== undefined:
+	{	
+		pattern.begin_match = string_match_to_regex(json.match)
+
+		if (json.name) pattern.names = json.name.split(" ")
+		
+		if (json.captures) pattern.begin_captures = json_to_captures(json.captures)
+		
+		break
+	}
+	case json.begin !== undefined && json.end !== undefined:
+	{
+		pattern.begin_match = string_match_to_regex(json.begin)
+		pattern.end_match   = string_match_to_regex(json.end)
+
+		if (json.name) pattern.names = json.name.split(" ")
+		if (json.contentName) pattern.content_names = json.contentName.split(" ")
+
+		if (json.beginCaptures) pattern.begin_captures = json_to_captures(json.beginCaptures)
+		if (json.endCaptures) pattern.end_captures = json_to_captures(json.endCaptures)
+
+		if (json.patterns) pattern.patterns = json.patterns.map(p => json_to_pattern(p, repo_json, repo))
+		
+		break
+	}
+	case json.include !== undefined:
+	{
+		let patterns = repo[json.include]
+		if (patterns !== undefined)
+			return patterns
+
+		if (json.include[0] !== "#")
+			break
+
+		let patterns_json = repo_json[json.include.slice(1)]
+		if (patterns_json === undefined)
+			break
+
+		repo[json.include] = pattern
+		Object.assign(pattern, json_to_pattern(patterns_json, repo_json, repo))
+
+		break
+	}
+	case json.patterns !== undefined:
+	{
+		if (json.patterns) pattern.patterns = json.patterns.map(p => json_to_pattern(p, repo_json, repo))
+
+		if (json.name) pattern.names = json.name.split(" ")
+		if (json.contentName) pattern.content_names = json.contentName.split(" ")
+
+		break
+	}
+	}
+
+	return pattern
 }
 
 /**
- * @param   {JSON_Captures} json
- * @returns {Captures}      */
+ @param   {JSON_Captures} json
+ @returns {Captures}      */
 function json_to_captures(json)
 {
-	/** @type {Captures} */ let captures = /** @type {*} */ ({...json}) // copy keys
+	let captures = /** @type {Captures} */ ({...json}) // copy keys
 	for (let [k, v] of Object.entries(json)) {
-		captures[k] = {
-			// json values cannot be undefined
-			names: /** @type {JSON_Capture} */ (v).name.split(" "),
-		}
+		// json values cannot be undefined
+		captures[k] = {names: /** @type {JSON_Capture} */(v).name.split(" ")}
 	}
 	return captures
 }
 
 /**
- * @typedef  {object}              Tokenizer
- * @property {string}              code
- * @property {string}              line
- * @property {number}              pos_char
- * @property {number}              pos_line
- * @property {{[_:number]: Token}} tokens // preallocated array
- * @property {number}              len    // len of tokens
+ @typedef  {object}              Tokenizer
+ @property {string}              code
+ @property {string}              line
+ @property {number}              pos_char
+ @property {number}              pos_line
+ @property {{[_:number]: Token}} tokens // preallocated array
+ @property {number}              len    // len of tokens
  */
 
 /**
- * @typedef  {object}   Token
- * @property {string}   content
- * @property {string[]} scopes
+ @typedef  {object}   Token
+ @property {string}   content
+ @property {string[]} scopes
  */
 
 /**
- * @param   {string}  code
- * @param   {Grammar} grammar
- * @returns {Token[]} */
+ @param   {string}  code
+ @param   {Grammar} grammar
+ @returns {Token[]} */
 export function code_to_tokens(code, grammar)
 {
-	/** @type {Token[]}  */ let tokens = new Array(code.length)
-	/** @type {string[]} */ let source_scopes = [grammar.scope]
-	/** @type {Tokenizer} */
-	let t = {
+	let tokens = /** @type {Token[]} */ (new Array(code.length))
+	let source_scopes = [grammar.scope]
+
+	/** @type {Tokenizer} */ let t = {
 		code    : code,
 		line    : code,
 		pos_char: 0,
@@ -316,12 +297,11 @@ export function code_to_tokens(code, grammar)
 
 	loop: while (t.pos_char < t.code.length)
 	{
-		for (const pattern of grammar.patterns) {
+		for (let pattern of grammar.patterns) {
 			if (pattern_to_tokens(t, pattern, source_scopes)) {
 				continue loop
 			}
 		}
-
 		increment_pos(t, source_scopes)
 	}
 
@@ -329,10 +309,10 @@ export function code_to_tokens(code, grammar)
 }
 
 /**
- * @param   {Tokenizer} t
- * @param   {Pattern}   pattern
- * @param   {string[]}  parent_scopes
- * @returns {boolean}   success */
+ @param   {Tokenizer} t
+ @param   {Pattern}   pattern
+ @param   {string[]}  parent_scopes
+ @returns {boolean}   success */
 function pattern_to_tokens(t, pattern, parent_scopes)
 {
 	// only patterns
@@ -349,7 +329,6 @@ function pattern_to_tokens(t, pattern, parent_scopes)
 		}
 		return false
 	}
-
 
 	// begin
 	pattern.begin_match.lastIndex = t.pos_char - t.pos_line
@@ -370,13 +349,17 @@ function pattern_to_tokens(t, pattern, parent_scopes)
 		return true
 	}
 
-	loop: while (t.pos_char < t.code.length)
-	{
+	let content_scopes = pattern.content_names.length > 0
+		? [...pattern_scopes, ...pattern.content_names]
+		: pattern_scopes
+
+	loop:
+	while (t.pos_char < t.code.length) {
 		// end
-		pattern.end_match.lastIndex = t.pos_char - t.pos_line
+		pattern.end_match.lastIndex = t.pos_char-t.pos_line
+
 		let end_result = pattern.end_match.exec(t.line)
-		if (end_result !== null)
-		{
+		if (end_result !== null) {
 			match_captures(t, end_result, pattern.end_captures, pattern_scopes)
 			increase_pos(t, end_result[0].length)
 			break loop
@@ -384,21 +367,21 @@ function pattern_to_tokens(t, pattern, parent_scopes)
 
 		// patterns
 		for (let subpattern of pattern.patterns) {
-			if (pattern_to_tokens(t, subpattern, pattern_scopes)) {
+			if (pattern_to_tokens(t, subpattern, content_scopes)) {
 				continue loop
 			}
 		}
 
-		increment_pos(t, pattern_scopes)
+		increment_pos(t, content_scopes)
 	}
 
 	return true
 }
 
 /**
- * @param   {Tokenizer} t
- * @param   {string[]}  scopes
- * @returns {void}      */
+ @param   {Tokenizer} t
+ @param   {string[]}  scopes
+ @returns {void}      */
 function increment_pos(t, scopes)
 {
 	// token for skipped text
@@ -424,9 +407,9 @@ function increment_pos(t, scopes)
 }
 
 /**
- * @param   {Tokenizer} t
- * @param   {number}    n
- * @returns {void}      */
+ @param   {Tokenizer} t
+ @param   {number}    n
+ @returns {void}      */
 function increase_pos(t, n)
 {
 	t.pos_char += n
@@ -437,17 +420,17 @@ function increase_pos(t, n)
 }
 
 /**
- * @param   {Tokenizer}       t
- * @param   {RegExpExecArray} result
- * @param   {Captures?}       captures
- * @param   {string[]}        pattern_scopes
- * @returns {void}            */
+ @param   {Tokenizer}       t
+ @param   {RegExpExecArray} result
+ @param   {Captures?}       captures
+ @param   {string[]}        pattern_scopes
+ @returns {void}            */
 function match_captures(t, result, captures, pattern_scopes)
 {
-	if (result[0].length === 0) return
+	if (result[0].length === 0)
+		return
 
-	if (captures == null)
-	{
+	if (captures == null) {
 		t.tokens[t.len++] = {
 			content: result[0],
 			scopes : pattern_scopes,
@@ -460,8 +443,7 @@ function match_captures(t, result, captures, pattern_scopes)
 		? [...pattern_scopes, ...captures[0].names]
 		: pattern_scopes
 
-	if (result.length === 1)
-	{
+	if (result.length === 1) {
 		t.tokens[t.len++] = {
 			content: result[0],
 			scopes : match_scopes,
@@ -481,15 +463,14 @@ function match_captures(t, result, captures, pattern_scopes)
 		let [pos, end] = indices
 
 		// look ahead
-		if (end > match_end) {
+		if (end > match_end)
 			break
-		}
 
 		// text between captures
 		if (pos > last_end) {
 			t.tokens[t.len++] = {
-				content: t.code.slice(t.pos_line + last_end, t.pos_line + pos),
-				scopes : match_scopes,
+				content: t.code.slice(t.pos_line+last_end, t.pos_line+pos),
+				scopes:  match_scopes,
 			}
 		}
 		last_end = end
@@ -498,38 +479,37 @@ function match_captures(t, result, captures, pattern_scopes)
 		let capture = captures[key]
 		t.tokens[t.len++] = {
 			content: group,
-			scopes : capture !== undefined && capture.names.length > 0
+			scopes:  capture !== undefined && capture.names.length > 0
 				? [...match_scopes, ...capture.names]
 				: match_scopes,
 		}
 	}
 
 	// text after last capture
-	if (last_end < match_end)
-	{
+	if (last_end < match_end) {
 		t.tokens[t.len++] = {
-			content: t.code.slice(t.pos_line + last_end, t.pos_line + match_end),
-			scopes : match_scopes,
+			content: t.code.slice(t.pos_line+last_end, t.pos_line+match_end),
+			scopes:  match_scopes,
 		}
 	}
 }
 
 /**
- * @typedef  {object}              JSON_Theme_Item
- * @property {string[] | string}   [scope]
- * @property {JSON_Theme_Settings} settings
- */
+ @typedef  {object}              JSON_Theme_Item
+ @property {string[] | string}   [scope]
+ @property {JSON_Theme_Settings} settings
+*/
 
 /**
- * @typedef  {object}              Theme_Item
- * @property {string[]}            selector
- * @property {JSON_Theme_Settings} settings
- */
+ @typedef  {object}              Theme_Item
+ @property {string[]}            selector
+ @property {JSON_Theme_Settings} settings
+*/
 
 /**
- * @param   {JSON_Theme_Item[]} json
- * @param   {string}            source_scope
- * @returns {Theme_Item[]}      */
+ @param   {JSON_Theme_Item[]} json
+ @param   {string}            source_scope
+ @returns {Theme_Item[]}      */
 export function json_to_theme_items(json, source_scope)
 {
 	/** @type {Theme_Item[]} */
@@ -550,7 +530,7 @@ export function json_to_theme_items(json, source_scope)
 			["source", "meta.block", ">", "child.scope"]
 
 			*/
-			/** @type {string[]} */ let selector = [""]
+			let selector = [""]
 			let is_space = false
 			
 			for (let char of selector_raw) {
@@ -563,7 +543,9 @@ export function json_to_theme_items(json, source_scope)
 					is_space = false
 					break
 				default:
-					if (is_space && selector[selector.length-1] !== ">" && selector[selector.length-1] !== "") {
+					if (is_space &&
+					    selector[selector.length-1] !== ">" &&
+					    selector[selector.length-1] !== "") {
 						selector.push("")
 					}
 					is_space = false
@@ -583,26 +565,25 @@ export function json_to_theme_items(json, source_scope)
 }
 
 /**
- * @typedef  {object} JSON_Theme_Settings
- * @property {string} [foreground]
- * @property {string} [background]
- * @property {string} [fontStyle]
+ @typedef  {object} JSON_Theme_Settings
+ @property {string} [foreground]
+ @property {string} [background]
+ @property {string} [fontStyle]
  */
 
 /** @typedef {Map<string, JSON_Theme_Settings>} Scope_Theme_Settings_Cache */
 
 /**
- * @param   {Token} token
- * @param   {Theme_Item[]} theme
- * @param   {Scope_Theme_Settings_Cache} cache
- * @returns {JSON_Theme_Settings}        */
+ @param   {Token}                      token
+ @param   {Theme_Item[]}               theme
+ @param   {Scope_Theme_Settings_Cache} cache
+ @returns {JSON_Theme_Settings}        */
 export function match_token_theme(token, theme, cache)
 {
 	let cache_string = token.scopes.join(" ")
 	let cached = cache.get(cache_string)
-	if (cached !== undefined) {
+	if (cached !== undefined)
 		return cached
-	}
 
 	/** @type {JSON_Theme_Settings} */ let settings = {}
 
@@ -630,6 +611,7 @@ export function match_token_theme(token, theme, cache)
 					selector_part = item.selector[i]
 					let scope = token.scopes[scope_idx]
 					scope_idx -= 1
+
 					if (scope.startsWith(selector_part) && (
 						scope.length === selector_part.length ||
 						scope[selector_part.length] === "."
@@ -646,6 +628,7 @@ export function match_token_theme(token, theme, cache)
 			{
 				let scope = token.scopes[scope_idx]
 				scope_idx -= 1
+
 				if (scope.startsWith(selector_part) && (
 					scope.length === selector_part.length ||
 					scope[selector_part.length] === "."
