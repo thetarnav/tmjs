@@ -39,11 +39,11 @@ function main() {
 function fetchCode() {
 	return fetch(CODE_WEBPATH).then(res => res.text())
 }
-/** @returns {Promise<shiki.ThemeRegistration>} */
+/** @returns {Promise<any>} */
 function fetchTheme() {
 	return fetch(THEME_JSON_WEBPATH).then(res => res.json())
 }
-/** @returns {Promise<shiki.LanguageRegistration>} */
+/** @returns {Promise<any>} */
 function fetchLang() {
 	return fetch(LANG_WEBPATH).then(res => res.json())
 }
@@ -83,7 +83,7 @@ async function update() {
 			token_el.className = "token"
 			elements[i] = token_el
 	
-			token_el.textContent = token.content
+			token_el.textContent = code.slice(token.pos, token.end)
 			if (settings.foreground) token_el.style.color           = settings.foreground
 			if (settings.background) token_el.style.backgroundColor = settings.background
 			if (settings.fontStyle) {

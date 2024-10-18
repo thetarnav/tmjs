@@ -1,9 +1,11 @@
+// import * as onigtojs from 'oniguruma-to-js'
+
 /*
 TODOs
 - [x] spaces in name in grammars (multiple names)
-- [x] selectors with ">"
-- [ ] selectors with "-"
-- [ ] selectors with ","
+- [x] selectors with '>'
+- [ ] selectors with '-'
+- [ ] selectors with ','
 - [ ] patterns in captures
 - [x] contentName
 - [ ] begin/while
@@ -93,11 +95,11 @@ export const URL_GRAMMAR_TYPESCRIPT = 'https://raw.githubusercontent.com/shikijs
  @returns {grammar is JSON_Grammar} */
 export function validate_json_grammar(grammar) {
 	return (
-		grammar !== null && typeof grammar === "object" &&
-		"name"       in grammar && typeof grammar.name === "string" &&
-		"scopeName"  in grammar && typeof grammar.scopeName === "string" &&
-		"patterns"   in grammar && validate_array(grammar.patterns, validate_json_pattern) &&
-		"repository" in grammar && validate_dict(grammar.repository, validate_json_pattern)
+		grammar !== null && typeof grammar === 'object' &&
+		'name'       in grammar && typeof grammar.name === 'string' &&
+		'scopeName'  in grammar && typeof grammar.scopeName === 'string' &&
+		'patterns'   in grammar && validate_array(grammar.patterns, validate_json_pattern) &&
+		'repository' in grammar && validate_dict(grammar.repository, validate_json_pattern)
 	)
 }
 
@@ -106,17 +108,17 @@ export function validate_json_grammar(grammar) {
  @returns {pattern is JSON_Pattern} */
 export function validate_json_pattern(pattern) {
 	return (
-		pattern !== null && typeof pattern === "object" &&
-		(!("name"          in pattern) || typeof pattern.name        === "string") &&
-		(!("contentName"   in pattern) || typeof pattern.contentName === "string") &&
-		(!("include"       in pattern) || typeof pattern.include     === "string") &&
-		(!("match"         in pattern) || typeof pattern.match       === "string") &&
-		(!("begin"         in pattern) || typeof pattern.begin       === "string") &&
-		(!("end"           in pattern) || typeof pattern.end         === "string") &&
-		(!("captures"      in pattern) || validate_dict(pattern.captures, validate_capture)) &&
-		(!("beginCaptures" in pattern) || validate_dict(pattern.beginCaptures, validate_capture)) &&
-		(!("endCaptures"   in pattern) || validate_dict(pattern.endCaptures, validate_capture)) &&
-		(!("patterns"      in pattern) || validate_array(pattern.patterns, validate_json_pattern))
+		pattern !== null && typeof pattern === 'object' &&
+		(!('name'          in pattern) || typeof pattern.name        === 'string') &&
+		(!('contentName'   in pattern) || typeof pattern.contentName === 'string') &&
+		(!('include'       in pattern) || typeof pattern.include     === 'string') &&
+		(!('match'         in pattern) || typeof pattern.match       === 'string') &&
+		(!('begin'         in pattern) || typeof pattern.begin       === 'string') &&
+		(!('end'           in pattern) || typeof pattern.end         === 'string') &&
+		(!('captures'      in pattern) || validate_dict(pattern.captures, validate_capture)) &&
+		(!('beginCaptures' in pattern) || validate_dict(pattern.beginCaptures, validate_capture)) &&
+		(!('endCaptures'   in pattern) || validate_dict(pattern.endCaptures, validate_capture)) &&
+		(!('patterns'      in pattern) || validate_array(pattern.patterns, validate_json_pattern))
 	)
 }
 
@@ -138,7 +140,7 @@ function validate_array(value, predicate) {
  @returns {value is Dict<T>}       */
 function validate_dict(value, predicate) {
 	return (
-		typeof value === "object" && value !== null && Object.values(value).every(predicate)
+		typeof value === 'object' && value !== null && Object.values(value).every(predicate)
 	)
 }
 
@@ -147,8 +149,8 @@ function validate_dict(value, predicate) {
  @returns {capture is JSON_Capture} */
 export function validate_capture(capture) {
 	return (
-		capture !== null && typeof capture === "object" &&
-		"name" in capture && typeof capture.name === "string"
+		capture !== null && typeof capture === 'object' &&
+		'name' in capture && typeof capture.name === 'string'
 	)
 }
 
@@ -169,8 +171,12 @@ export function json_to_grammar(json)
 @param   {string} str 
 @returns {RegExp} */
 function string_match_to_regex(str) {
-	str = str.replaceAll("\\s", "[ \\t\\v\\f]") // tm regex does not includes newlines in \s
-	return new RegExp(str, "yd")
+	str = str.replaceAll('\\s', '[ \\t\\v\\f]') // tm regex does not includes newlines in \s
+	return new RegExp(str, 'yd')
+	// return onigtojs.onigurumaToRegexp(str, {
+	// 	flags: 'ydgm',
+	// 	ignoreContiguousAnchors: true,
+	// })
 }
 
 /**
@@ -195,7 +201,7 @@ function json_to_pattern(json, repo_json, repo)
 	{	
 		pattern.begin_match = string_match_to_regex(json.match)
 
-		if (json.name) pattern.names = json.name.split(" ")
+		if (json.name) pattern.names = json.name.split(' ')
 		
 		if (json.captures) pattern.begin_captures = json_to_captures(json.captures)
 		
@@ -206,8 +212,8 @@ function json_to_pattern(json, repo_json, repo)
 		pattern.begin_match = string_match_to_regex(json.begin)
 		pattern.end_match   = string_match_to_regex(json.end)
 
-		if (json.name) pattern.names = json.name.split(" ")
-		if (json.contentName) pattern.content_names = json.contentName.split(" ")
+		if (json.name) pattern.names = json.name.split(' ')
+		if (json.contentName) pattern.content_names = json.contentName.split(' ')
 
 		if (json.beginCaptures) pattern.begin_captures = json_to_captures(json.beginCaptures)
 		if (json.endCaptures) pattern.end_captures = json_to_captures(json.endCaptures)
@@ -222,7 +228,7 @@ function json_to_pattern(json, repo_json, repo)
 		if (patterns !== undefined)
 			return patterns
 
-		if (json.include[0] !== "#")
+		if (json.include[0] !== '#')
 			break
 
 		let patterns_json = repo_json[json.include.slice(1)]
@@ -238,8 +244,8 @@ function json_to_pattern(json, repo_json, repo)
 	{
 		if (json.patterns) pattern.patterns = json.patterns.map(p => json_to_pattern(p, repo_json, repo))
 
-		if (json.name) pattern.names = json.name.split(" ")
-		if (json.contentName) pattern.content_names = json.contentName.split(" ")
+		if (json.name) pattern.names = json.name.split(' ')
+		if (json.contentName) pattern.content_names = json.contentName.split(' ')
 
 		break
 	}
@@ -256,24 +262,25 @@ function json_to_captures(json)
 	let captures = /** @type {Captures} */ ({...json}) // copy keys
 	for (let [k, v] of Object.entries(json)) {
 		// json values cannot be undefined
-		captures[k] = {names: /** @type {JSON_Capture} */(v).name.split(" ")}
+		captures[k] = {names: /** @type {JSON_Capture} */(v).name.split(' ')}
 	}
 	return captures
 }
 
 /**
- @typedef  {object}              Tokenizer
- @property {string}              code
- @property {string}              line
- @property {number}              pos_char
- @property {number}              pos_line
- @property {{[_:number]: Token}} tokens // preallocated array
- @property {number}              len    // len of tokens
+ @typedef  {object}  Tokenizer
+ @property {string}  code
+ @property {string}  line
+ @property {number}  pos_char
+ @property {number}  pos_line
+ @property {Token[]} tokens // preallocated array
+ @property {number}  len    // len of tokens
  */
 
 /**
  @typedef  {object}   Token
- @property {string}   content
+ @property {number}   pos
+ @property {number}   end
  @property {string[]} scopes
  */
 
@@ -389,16 +396,17 @@ function increment_pos(t, scopes)
 		let last_token = t.tokens[t.len-1]
 		if (last_token.scopes !== scopes) {
 			t.tokens[t.len++] = {
-				content: t.code[t.pos_char],
-				scopes : scopes,
+				pos:    t.pos_char,
+				end:    t.pos_char+1,
+				scopes: scopes,
 			}
 		} else {
-			last_token.content += t.code[t.pos_char]
+			last_token.end += 1
 		}
 	}
 
 	// new line pos
-	if (t.code[t.pos_char] === "\n") {
+	if (t.code[t.pos_char] === '\n') {
 		t.pos_line = t.pos_char + 1
 		t.line     = t.code.slice(t.pos_line)
 	}
@@ -413,7 +421,7 @@ function increment_pos(t, scopes)
 function increase_pos(t, n)
 {
 	t.pos_char += n
-	if (t.code[t.pos_char-1] === "\n") {
+	if (t.code[t.pos_char-1] === '\n') {
 		t.pos_line = t.pos_char
 		t.line     = t.code.slice(t.pos_line)
 	}
@@ -430,66 +438,72 @@ function match_captures(t, result, captures, pattern_scopes)
 	if (result[0].length === 0)
 		return
 
+	let match_pos = t.pos_line + result.index
+	let match_end = match_pos + result[0].length
+
 	if (captures == null) {
 		t.tokens[t.len++] = {
-			content: result[0],
-			scopes : pattern_scopes,
+			pos:    match_pos,
+			end:    match_end,
+			scopes: pattern_scopes,
 		}
 		return
 	}
 
-	// capture 0 is the whole match
-	let match_scopes = captures[0] !== undefined && captures[0].names.length > 0
-		? [...pattern_scopes, ...captures[0].names]
-		: pattern_scopes
+	let ti_start = t.len
 
-	if (result.length === 1) {
-		t.tokens[t.len++] = {
-			content: result[0],
-			scopes : match_scopes,
-		}
-		return
+	t.tokens[t.len++] = {
+		pos:    match_pos,
+		end:    match_end,
+		scopes: captures[0] !== undefined && captures[0].names.length > 0
+			? [...pattern_scopes, ...captures[0].names]
+			: pattern_scopes,
 	}
 
-	// line-relative
-	let last_end  = result.index
-	let match_end = result.index + result[0].length
+	for (let ri = 1; ri < result.length; ri++) {
 
-	for (let key = 1; key < result.length; key += 1)
-	{
-		let group   = result[key]
-		let indices = /** @type {RegExpIndicesArray} */(result.indices)[key]
-		if (indices === undefined) continue
-		let [pos, end] = indices
+		let indices = /** @type {RegExpIndicesArray} */(result.indices)[ri]
+		if (indices == null)
+			continue
+
+		let capture = captures[ri]
+		if (capture == null || capture.names.length === 0)
+			continue
+
+		let pos = indices[0] + t.pos_line
+		let end = indices[1] + t.pos_line
 
 		// look ahead
 		if (end > match_end)
 			break
 
-		// text between captures
-		if (pos > last_end) {
-			t.tokens[t.len++] = {
-				content: t.code.slice(t.pos_line+last_end, t.pos_line+pos),
-				scopes:  match_scopes,
+		for (let ti = t.len-1; ti >= ti_start; ti--) {
+			let prev = t.tokens[ti]
+
+			/*
+			 [   prev token  ]
+				   [new]
+			   v  v  v  v  v
+			 [prev][new][prev]
+			*/
+
+			if (pos >= prev.pos && end <= prev.end) {
+				t.tokens.splice(ti, 1, {
+					pos:    prev.pos,
+					end:    pos,
+					scopes: prev.scopes,
+				}, {
+					pos:    pos,
+					end:    end,
+					scopes: [...prev.scopes, ...capture.names],
+				}, {
+					pos:    end,
+					end:    prev.end,
+					scopes: prev.scopes,
+				})
+				t.len += 2
+				break
 			}
-		}
-		last_end = end
-
-		// capture
-		let capture = captures[key]
-		t.tokens[t.len++] = {
-			content: group,
-			scopes:  capture !== undefined && capture.names.length > 0
-				? [...match_scopes, ...capture.names]
-				: match_scopes,
-		}
-	}
-
-	// text after last capture
-	if (last_end < match_end) {
-		t.tokens[t.len++] = {
-			content: t.code.slice(t.pos_line+last_end, t.pos_line+match_end),
-			scopes:  match_scopes,
 		}
 	}
 }
@@ -525,12 +539,12 @@ export function json_to_theme_items(json, source_scope)
 			/*
 			parse selector
 			
-			" source meta.block >   child.scope"
+			' source meta.block >   child.scope'
 			 v v v v v v v v v v v v v v v v
-			["source", "meta.block", ">", "child.scope"]
+			['source', 'meta.block', '>', 'child.scope']
 
 			*/
-			let selector = [""]
+			let selector = ['']
 			let is_space = false
 			
 			for (let char of selector_raw) {
@@ -539,14 +553,14 @@ export function json_to_theme_items(json, source_scope)
 					is_space = true
 					break
 				case '>':
-					selector.push(">", "")
+					selector.push('>', '')
 					is_space = false
 					break
 				default:
 					if (is_space &&
-					    selector[selector.length-1] !== ">" &&
-					    selector[selector.length-1] !== "") {
-						selector.push("")
+					    selector[selector.length-1] !== '>' &&
+					    selector[selector.length-1] !== '') {
+						selector.push('')
 					}
 					is_space = false
 					selector[selector.length-1] += char
@@ -580,7 +594,7 @@ export function json_to_theme_items(json, source_scope)
  @returns {JSON_Theme_Settings}        */
 export function match_token_theme(token, theme, cache)
 {
-	let cache_string = token.scopes.join(" ")
+	let cache_string = token.scopes.join(' ')
 	let cached = cache.get(cache_string)
 	if (cached !== undefined)
 		return cached
@@ -603,7 +617,7 @@ export function match_token_theme(token, theme, cache)
 			let selector_part = item.selector[i]
 			
 			// direct child
-			if (selector_part === ">")
+			if (selector_part === '>')
 			{
 				i -= 1
 				if (scope_idx >= 0 && i >= 0)
@@ -614,7 +628,7 @@ export function match_token_theme(token, theme, cache)
 
 					if (scope.startsWith(selector_part) && (
 						scope.length === selector_part.length ||
-						scope[selector_part.length] === "."
+						scope[selector_part.length] === '.'
 					)) {
 						specificity += (scope_idx+2) * 10 * selector_part.length
 						continue selector_loop
@@ -631,7 +645,7 @@ export function match_token_theme(token, theme, cache)
 
 				if (scope.startsWith(selector_part) && (
 					scope.length === selector_part.length ||
-					scope[selector_part.length] === "."
+					scope[selector_part.length] === '.'
 				)) {
 					specificity += (scope_idx+2) * 10 * selector_part.length
 					continue selector_loop
@@ -643,15 +657,15 @@ export function match_token_theme(token, theme, cache)
 		}
 
 		// found
-		if (specificity > specificity_foreground && "foreground" in item.settings) {
+		if (specificity > specificity_foreground && 'foreground' in item.settings) {
 			settings.foreground    = item.settings.foreground
 			specificity_foreground = specificity
 		}
-		if (specificity > specificity_background && "background" in item.settings) {
+		if (specificity > specificity_background && 'background' in item.settings) {
 			settings.background    = item.settings.background
 			specificity_background = specificity
 		}
-		if (specificity > specificity_font_style && "fontStyle" in item.settings) {
+		if (specificity > specificity_font_style && 'fontStyle' in item.settings) {
 			settings.fontStyle     = item.settings.fontStyle
 			specificity_font_style = specificity
 		}
