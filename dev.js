@@ -6,16 +6,12 @@ import * as path     from "node:path"
 import * as jsonc    from "jsonc-parser"
 import * as chokidar from "chokidar"
 import * as ws       from "ws"
+import * as esbuild  from "esbuild"
 
 import {
-	HTTP_PORT,
-	WEB_SOCKET_PORT,
-	THEME_JSONC_FILENAME,
-	CODE_FILENAME,
-	LANG_FILENAME,
-	THEME_JSON_WEBPATH,
-	CODE_WEBPATH,
-	LANG_WEBPATH,
+	HTTP_PORT, WEB_SOCKET_PORT,
+	THEME_JSONC_FILENAME, CODE_FILENAME, LANG_FILENAME,
+	THEME_JSON_WEBPATH, CODE_WEBPATH, LANG_WEBPATH,
 } from "./src/constants.js"
 
 const dirname          = path.dirname(url.fileURLToPath(import.meta.url))
@@ -25,11 +21,9 @@ const code_path        = path.join(src_path, CODE_FILENAME)
 const lang_path        = path.join(src_path, LANG_FILENAME)
 
 http.createServer(requestListener).listen(HTTP_PORT)
-// eslint-disable-next-line no-console
 console.log(`Server running at http://127.0.0.1:${HTTP_PORT}`)
 
 const wss = new ws.WebSocketServer({port: WEB_SOCKET_PORT})
-// eslint-disable-next-line no-console
 console.log("WebSocket server running at http://127.0.0.1:" + WEB_SOCKET_PORT)
 
 /** @type {Promise<string>} */
@@ -38,6 +32,39 @@ let last_theme_json = buildTheme()
 chokidar
 	.watch([theme_jsonc_path, code_path, lang_path])
 	.on("change", handleFileChange)
+
+// Watch source files using esbuild
+esbuild.context({
+    entryPoints: [code_path, lang_path],
+    bundle: true,
+    outdir: path.join(dirname, "dist"),
+	plugins: [{
+		name: "watch-callback",
+		setup(build) {
+			build.onEnd(res => {
+				notifyClients(CODE_WEBPATH)
+			})
+		}
+	}]
+    // watch: {
+    //     onRebuild(error, result) {
+    //         if (error) {
+    //             // eslint-disable-next-line no-console
+    //             console.error("watch build failed:", error)
+    //         } else {
+    //             // eslint-disable-next-line no-console
+    //             console.log("watch build succeeded:", result)
+    //             notifyClients(CODE_WEBPATH)
+    //         }
+    //     },
+    // },
+
+}).then(ctx => {
+	ctx.watch()
+    // eslint-disable-next-line no-console
+    console.log("esbuild is watching for changes...")
+})
+
 
 /**
  * @param   {http.IncomingMessage} req
@@ -48,7 +75,7 @@ async function requestListener(req, res) {
 	if (!req.url || req.method !== "GET") {
 		res.writeHead(404)
 		res.end()
-		// eslint-disable-next-line no-console
+	
 		console.log(`${req.method} ${req.url} 404`)
 		return
 	}
@@ -60,7 +87,7 @@ async function requestListener(req, res) {
 		const theme_json = await last_theme_json
 		res.writeHead(200, {"Content-Type": "application/json"})
 		res.end(theme_json)
-		// eslint-disable-next-line no-console
+	
 		console.log(`${req.method} ${req.url} 200`)
 		return
 	}
@@ -77,7 +104,7 @@ async function requestListener(req, res) {
 	if (!exists) {
 		res.writeHead(404)
 		res.end()
-		// eslint-disable-next-line no-console
+	
 		console.log(`${req.method} ${req.url} 404`)
 		return
 	}
@@ -89,7 +116,7 @@ async function requestListener(req, res) {
 	const stream = fs.createReadStream(filepath)
 	stream.pipe(res)
 
-	// eslint-disable-next-line no-console
+
 	console.log(`${req.method} ${req.url} 200`)
 }
 
@@ -98,7 +125,7 @@ async function requestListener(req, res) {
  * @returns {void}
  */
 function notifyClients(path) {
-	// eslint-disable-next-line no-console
+
 	console.log(path, "changed!")
 
 	for (const client of wss.clients) {
