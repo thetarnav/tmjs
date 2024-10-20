@@ -1,11 +1,11 @@
-import * as url from "node:url"
-import * as fs from "node:fs"
-import * as fsp from "node:fs/promises"
-import * as http from "node:http"
-import * as path from "node:path"
-import * as jsonc from "jsonc-parser"
+import * as url      from "node:url"
+import * as fs       from "node:fs"
+import * as fsp      from "node:fs/promises"
+import * as http     from "node:http"
+import * as path     from "node:path"
+import * as jsonc    from "jsonc-parser"
 import * as chokidar from "chokidar"
-import * as ws from "ws"
+import * as ws       from "ws"
 
 import {
 	HTTP_PORT,
@@ -18,11 +18,11 @@ import {
 	LANG_WEBPATH,
 } from "./src/constants.js"
 
-const dirname = path.dirname(url.fileURLToPath(import.meta.url))
-const src_path = path.join(dirname, "src")
+const dirname          = path.dirname(url.fileURLToPath(import.meta.url))
+const src_path         = path.join(dirname, "src")
 const theme_jsonc_path = path.join(src_path, THEME_JSONC_FILENAME)
-const code_path = path.join(src_path, CODE_FILENAME)
-const lang_path = path.join(src_path, LANG_FILENAME)
+const code_path        = path.join(src_path, CODE_FILENAME)
+const lang_path        = path.join(src_path, LANG_FILENAME)
 
 http.createServer(requestListener).listen(HTTP_PORT)
 // eslint-disable-next-line no-console
@@ -35,7 +35,9 @@ console.log("WebSocket server running at http://127.0.0.1:" + WEB_SOCKET_PORT)
 /** @type {Promise<string>} */
 let last_theme_json = buildTheme()
 
-chokidar.watch([theme_jsonc_path, code_path, lang_path]).on("change", handleFileChange)
+chokidar
+	.watch([theme_jsonc_path, code_path, lang_path])
+	.on("change", handleFileChange)
 
 /**
  * @param   {http.IncomingMessage} req
@@ -139,29 +141,18 @@ async function buildTheme() {
  */
 function mimeType(ext) {
 	switch (ext) {
-		case "html":
-			return "text/html; charset=UTF-8"
-		case "js":
-		case "mjs":
-			return "application/javascript"
-		case "json":
-			return "application/json"
-		case "wasm":
-			return "application/wasm"
-		case "css":
-			return "text/css"
-		case "png":
-			return "image/png"
-		case "jpg":
-			return "image/jpg"
-		case "gif":
-			return "image/gif"
-		case "ico":
-			return "image/x-icon"
-		case "svg":
-			return "image/svg+xml"
-		default:
-			return "application/octet-stream"
+	case "html": return "text/html; charset=UTF-8"
+	case "js":
+	case "mjs":  return "application/javascript"
+	case "json": return "application/json"
+	case "wasm": return "application/wasm"
+	case "css":  return "text/css"
+	case "png":  return "image/png"
+	case "jpg":  return "image/jpg"
+	case "gif":  return "image/gif"
+	case "ico":  return "image/x-icon"
+	case "svg":  return "image/svg+xml"
+	default:     return "application/octet-stream"
 	}
 }
 

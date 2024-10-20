@@ -1,5 +1,5 @@
 {
-	"name": "shikiji-playground",
+	"name": "syntax-playground",
 	"version": "0.0.0",
 	"type": "module",
 	"private": true,
@@ -9,13 +9,13 @@
 	},
 	"dependencies": {
 		"@shikijs/core": "^1.6.5",
-		"chokidar": "^3.6.0",
+		"chokidar": "^4.0.1",
 		"jsonc-parser": "^3.2.1",
 		"shiki": "^1.6.5",
 		"ws": "^8.16.0"
 	},
 	"devDependencies": {
-		"@types/node": "^20.12.7",
+		"@types/node": "^22.7.7",
 		"@types/ws": "^8.5.10",
 		"typescript": "^5.3.3"
 	}
