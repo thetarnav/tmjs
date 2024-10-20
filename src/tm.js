@@ -63,8 +63,8 @@ export const URL_GRAMMAR_TYPESCRIPT = 'https://raw.githubusercontent.com/shikijs
 
 /**
  @typedef  {object}    Pattern
- @property {string[]}  names
- @property {string[]}  content_names
+ @property {string}    name
+ @property {string}    content_name
  @property {RegExp?}   begin_match
  @property {Captures?} begin_captures
  @property {RegExp?}   end_match
@@ -187,8 +187,8 @@ function string_match_to_regex(str) {
 function json_to_pattern(json, repo_json, repo)
 {
 	/** @type {Pattern} */ let pattern = {
-		names         : [],
-		content_names : [],
+		name          : "",
+		content_name  : "",
 		begin_match   : null,
 		begin_captures: null,
 		end_match     : null,
@@ -201,7 +201,7 @@ function json_to_pattern(json, repo_json, repo)
 	{	
 		pattern.begin_match = string_match_to_regex(json.match)
 
-		if (json.name) pattern.names = json.name.split(' ')
+		if (json.name) pattern.name = json.name
 		
 		if (json.captures) pattern.begin_captures = json_to_captures(json.captures)
 		
@@ -212,8 +212,8 @@ function json_to_pattern(json, repo_json, repo)
 		pattern.begin_match = string_match_to_regex(json.begin)
 		pattern.end_match   = string_match_to_regex(json.end)
 
-		if (json.name) pattern.names = json.name.split(' ')
-		if (json.contentName) pattern.content_names = json.contentName.split(' ')
+		if (json.name) pattern.name = json.name
+		if (json.contentName) pattern.content_name = json.contentName
 
 		if (json.beginCaptures) pattern.begin_captures = json_to_captures(json.beginCaptures)
 		if (json.endCaptures) pattern.end_captures = json_to_captures(json.endCaptures)
@@ -244,8 +244,8 @@ function json_to_pattern(json, repo_json, repo)
 	{
 		if (json.patterns) pattern.patterns = json.patterns.map(p => json_to_pattern(p, repo_json, repo))
 
-		if (json.name) pattern.names = json.name.split(' ')
-		if (json.contentName) pattern.content_names = json.contentName.split(' ')
+		if (json.name) pattern.name = json.name
+		if (json.contentName) pattern.content_name = json.contentName
 
 		break
 	}
@@ -325,8 +325,8 @@ function pattern_to_tokens(t, pattern, parent_scopes)
 	// only patterns
 	if (pattern.begin_match === null)
 	{
-		let pattern_scopes = pattern.names.length > 0
-			? [...parent_scopes, ...pattern.names]
+		let pattern_scopes = pattern.name.length > 0
+			? [...parent_scopes, pattern.name]
 			: parent_scopes
 
 		for (let subpattern of pattern.patterns) {
@@ -344,8 +344,8 @@ function pattern_to_tokens(t, pattern, parent_scopes)
 		return false
 	}
 
-	let pattern_scopes = pattern.names.length > 0
-		? [...parent_scopes, ...pattern.names]
+	let pattern_scopes = pattern.name.length > 0
+		? [...parent_scopes, pattern.name]
 		: parent_scopes
 
 	let start_pos_char = t.pos_char
@@ -355,8 +355,8 @@ function pattern_to_tokens(t, pattern, parent_scopes)
 	// begin-end (+patterns)
 	if (pattern.end_match != null) {
 
-		let content_scopes = pattern.content_names.length > 0
-			? [...pattern_scopes, ...pattern.content_names]
+		let content_scopes = pattern.content_name.length > 0
+			? [...pattern_scopes, pattern.content_name]
 			: pattern_scopes
 	
 		loop:
