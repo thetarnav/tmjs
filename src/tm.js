@@ -1,17 +1,27 @@
 import * as onigtojs from 'oniguruma-to-js'
 
 /*
+
 TODOs
+
+tokenizer:
 - [x] spaces in name in grammars (multiple names)
-- [x] theme: selectors with '>'
-- [ ] theme: selectors with '-'
-- [ ] theme: selectors with ','
 - [ ] patterns in captures
 - [x] contentName
 - [ ] begin/while
 - [ ] including other langs
-- [ ] bitset font style
+- [ ] inline oniguruma-to-js
 - [x] tm regex does not includes newlines in `\s`
+	- [ ] needs double checking
+- [ ] tree result
+
+theme:
+- [x] selectors with '>'
+- [ ] selectors with '-'
+- [ ] selectors with ','
+- [ ] fix specificity (visible in jsdoc)
+- [ ] bitset font style
+
 */
 
 export const URL_GRAMMAR_TYPESCRIPT = 'https://raw.githubusercontent.com/shikijs/textmate-grammars-themes/refs/heads/main/packages/tm-grammars/grammars/typescript.json'
