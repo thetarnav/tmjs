@@ -11,6 +11,8 @@
 		"@shikijs/core": "^1.6.5",
 		"chokidar": "^4.0.1",
 		"jsonc-parser": "^3.2.1",
+		"oniguruma-to-js": "^0.4.3",
+		"regex": "^4.3.3",
 		"shiki": "^1.6.5",
 		"ws": "^8.16.0"
 	},

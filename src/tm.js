@@ -1,11 +1,11 @@
-// import * as onigtojs from 'oniguruma-to-js'
+import * as onigtojs from 'oniguruma-to-js'
 
 /*
 TODOs
 - [x] spaces in name in grammars (multiple names)
-- [x] selectors with '>'
-- [ ] selectors with '-'
-- [ ] selectors with ','
+- [x] theme: selectors with '>'
+- [ ] theme: selectors with '-'
+- [ ] theme: selectors with ','
 - [ ] patterns in captures
 - [x] contentName
 - [ ] begin/while
@@ -171,12 +171,12 @@ export function json_to_grammar(json)
 @param   {string} str 
 @returns {RegExp} */
 function string_match_to_regex(str) {
-	str = str.replaceAll('\\s', '[ \\t\\v\\f]') // tm regex does not includes newlines in \s
-	return new RegExp(str, 'yd')
-	// return onigtojs.onigurumaToRegexp(str, {
-	// 	flags: 'ydgm',
-	// 	ignoreContiguousAnchors: true,
-	// })
+	// str = str.replaceAll('\\s', '[ \\t\\v\\f]') // tm regex does not includes newlines in \s
+	return onigtojs.onigurumaToRegexp(str, {
+		flags: 'ydm',
+		ignoreContiguousAnchors: true,
+	})
+	// return new RegExp(str, 'yd')
 }
 
 /**
@@ -348,41 +348,44 @@ function pattern_to_tokens(t, pattern, parent_scopes)
 		? [...parent_scopes, ...pattern.names]
 		: parent_scopes
 
+	let start_pos_char = t.pos_char
+
 	match_captures(t, begin_result, pattern.begin_captures, pattern_scopes)
-	increase_pos(t, begin_result[0].length)
 
-	// no end
-	if (pattern.end_match === null) {
-		return true
-	}
+	// begin-end (+patterns)
+	if (pattern.end_match != null) {
 
-	let content_scopes = pattern.content_names.length > 0
-		? [...pattern_scopes, ...pattern.content_names]
-		: pattern_scopes
-
-	loop:
-	while (t.pos_char < t.code.length) {
-		// end
-		pattern.end_match.lastIndex = t.pos_char-t.pos_line
-
-		let end_result = pattern.end_match.exec(t.line)
-		if (end_result !== null) {
-			match_captures(t, end_result, pattern.end_captures, pattern_scopes)
-			increase_pos(t, end_result[0].length)
-			break loop
-		}
-
-		// patterns
-		for (let subpattern of pattern.patterns) {
-			if (pattern_to_tokens(t, subpattern, content_scopes)) {
-				continue loop
+		let content_scopes = pattern.content_names.length > 0
+			? [...pattern_scopes, ...pattern.content_names]
+			: pattern_scopes
+	
+		loop:
+		while (t.pos_char < t.code.length) {
+			// end
+			pattern.end_match.lastIndex = t.pos_char-t.pos_line
+	
+			let end_result = pattern.end_match.exec(t.line)
+			if (end_result !== null) {
+				match_captures(t, end_result, pattern.end_captures, pattern_scopes)
+				break loop
 			}
+	
+			// patterns
+			for (let subpattern of pattern.patterns) {
+				if (pattern_to_tokens(t, subpattern, content_scopes)) {
+					continue loop
+				}
+			}
+	
+			increment_pos(t, content_scopes)
 		}
-
-		increment_pos(t, content_scopes)
 	}
 
-	return true
+	// Sometimes the all of the matches return a result full of look-acheads
+	// where each `result[0].length === 0`
+	// so the cursor doesn't move
+	// and can cause an infinite loop if `true` is returned
+	return start_pos_char !== t.pos_char
 }
 
 /**
@@ -415,19 +418,6 @@ function increment_pos(t, scopes)
 }
 
 /**
- @param   {Tokenizer} t
- @param   {number}    n
- @returns {void}      */
-function increase_pos(t, n)
-{
-	t.pos_char += n
-	if (t.code[t.pos_char-1] === '\n') {
-		t.pos_line = t.pos_char
-		t.line     = t.code.slice(t.pos_line)
-	}
-}
-
-/**
  @param   {Tokenizer}       t
  @param   {RegExpExecArray} result
  @param   {Captures?}       captures
@@ -435,11 +425,12 @@ function increase_pos(t, n)
  @returns {void}            */
 function match_captures(t, result, captures, pattern_scopes)
 {
-	if (result[0].length === 0)
+	let match_len = result[0].length
+	if (match_len === 0)
 		return
 
 	let match_pos = t.pos_line + result.index
-	let match_end = match_pos + result[0].length
+	let match_end = match_pos + match_len
 
 	if (captures == null) {
 		t.tokens[t.len++] = {
@@ -447,64 +438,70 @@ function match_captures(t, result, captures, pattern_scopes)
 			end:    match_end,
 			scopes: pattern_scopes,
 		}
-		return
-	}
-
-	let ti_start = t.len
-
-	t.tokens[t.len++] = {
-		pos:    match_pos,
-		end:    match_end,
-		scopes: captures[0] !== undefined && captures[0].names.length > 0
-			? [...pattern_scopes, ...captures[0].names]
-			: pattern_scopes,
-	}
-
-	for (let ri = 1; ri < result.length; ri++) {
-
-		let indices = /** @type {RegExpIndicesArray} */(result.indices)[ri]
-		if (indices == null)
-			continue
-
-		let capture = captures[ri]
-		if (capture == null || capture.names.length === 0)
-			continue
-
-		let pos = indices[0] + t.pos_line
-		let end = indices[1] + t.pos_line
-
-		// look ahead
-		if (end > match_end)
-			break
-
-		for (let ti = t.len-1; ti >= ti_start; ti--) {
-			let prev = t.tokens[ti]
-
-			/*
-			 [   prev token  ]
-				   [new]
-			   v  v  v  v  v
-			 [prev][new][prev]
-			*/
-
-			if (pos >= prev.pos && end <= prev.end) {
-				t.tokens.splice(ti, 1, {
-					pos:    prev.pos,
-					end:    pos,
-					scopes: prev.scopes,
-				}, {
-					pos:    pos,
-					end:    end,
-					scopes: [...prev.scopes, ...capture.names],
-				}, {
-					pos:    end,
-					end:    prev.end,
-					scopes: prev.scopes,
-				})
-				t.len += 2
+	} else {
+		let ti_start = t.len
+	
+		t.tokens[t.len++] = {
+			pos:    match_pos,
+			end:    match_end,
+			scopes: captures[0] !== undefined && captures[0].names.length > 0
+				? [...pattern_scopes, ...captures[0].names]
+				: pattern_scopes,
+		}
+	
+		for (let ri = 1; ri < result.length; ri++) {
+	
+			let indices = /** @type {RegExpIndicesArray} */(result.indices)[ri]
+			if (indices == null)
+				continue
+	
+			let capture = captures[ri]
+			if (capture == null || capture.names.length === 0)
+				continue
+	
+			let pos = indices[0] + t.pos_line
+			let end = indices[1] + t.pos_line
+	
+			// look ahead
+			if (end > match_end)
 				break
+	
+			for (let ti = t.len-1; ti >= ti_start; ti--) {
+				let prev = t.tokens[ti]
+	
+				/*
+				 [   prev token  ]
+					   [new]
+				   v  v  v  v  v
+				 [prev][new][prev]
+				*/
+	
+				if (pos >= prev.pos && end <= prev.end) {
+					t.tokens.splice(ti, 1, {
+						pos:    prev.pos,
+						end:    pos,
+						scopes: prev.scopes,
+					}, {
+						pos:    pos,
+						end:    end,
+						scopes: [...prev.scopes, ...capture.names],
+					}, {
+						pos:    end,
+						end:    prev.end,
+						scopes: prev.scopes,
+					})
+					t.len += 2
+					break
+				}
 			}
 		}
+	}
+
+	// Increase char pos
+	t.pos_char += match_len
+	if (t.code[t.pos_char-1] === '\n') {
+		t.pos_line = t.pos_char
+		t.line     = t.code.slice(t.pos_line)
 	}
 }
 
