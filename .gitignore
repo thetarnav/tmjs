@@ -1,3 +1,6 @@
 node_modules
 dist
 ols.json
+
+# editors
+.vscode/settings.json
