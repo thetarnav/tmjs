@@ -14,6 +14,7 @@
 		"oniguruma-to-js": "^0.4.3",
 		"regex": "^4.3.3",
 		"shiki": "^1.6.5",
+		"vscode-oniguruma": "^2.0.1",
 		"ws": "^8.16.0"
 	},
 	"devDependencies": {

@@ -26,6 +26,9 @@ importers:
       shiki:
         specifier: ^1.6.5
         version: 1.22.0
+      vscode-oniguruma:
+        specifier: ^2.0.1
+        version: 2.0.1
       ws:
         specifier: ^8.16.0
         version: 8.18.0
@@ -181,6 +184,9 @@ packages:
 
   vfile@6.0.3:
     resolution: {integrity: sha512-KzIbH/9tXat2u30jf+smMwFCsno4wHVdNmzFyL+T/L3UGqqk6JKfVqOFOZEpZSHADH1k40ab6NUIXZq422ov3Q==}
+
+  vscode-oniguruma@2.0.1:
+    resolution: {integrity: sha512-poJU8iHIWnC3vgphJnrLZyI3YdqRlR27xzqDmpPXYzA93R4Gk8z7T6oqDzDoHjoikA2aS82crdXFkjELCdJsjQ==}
 
   ws@8.18.0:
     resolution: {integrity: sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw==}
@@ -379,6 +385,8 @@ snapshots:
     dependencies:
       '@types/unist': 3.0.3
       vfile-message: 4.0.2
+
+  vscode-oniguruma@2.0.1: {}
 
   ws@8.18.0: {}
 

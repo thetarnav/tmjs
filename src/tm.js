@@ -171,12 +171,10 @@ export function json_to_grammar(json)
 @param   {string} str 
 @returns {RegExp} */
 function string_match_to_regex(str) {
-	// str = str.replaceAll('\\s', '[ \\t\\v\\f]') // tm regex does not includes newlines in \s
 	return onigtojs.onigurumaToRegexp(str, {
 		flags: 'ydm',
 		ignoreContiguousAnchors: true,
 	})
-	// return new RegExp(str, 'yd')
 }
 
 /**
