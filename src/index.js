@@ -49,7 +49,7 @@ function render_scope(scope, src) {
 		)
 	])
 
-	render_tooltip(header, JSON.stringify(src.slice(scope.pos, scope.end)))
+	render_tooltip(header, src.slice(scope.pos, scope.end))
 
     return container
 }
@@ -92,6 +92,7 @@ function render_tooltip(el, text) {
 		
 		tooltip_scope_el = el
 		tooltip_el.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`
+		tooltip_el.style.maxWidth  = `${window.innerWidth - e.clientX}px`
 	})
 
 	el.addEventListener('mouseleave', () => {
