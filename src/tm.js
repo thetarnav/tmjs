@@ -318,28 +318,6 @@ function json_to_captures(json)
  @property {Scope[]} children
 */
 
-/**
-@param   {string} name
-@param   {number} pos
-@param   {number} end
-@param   {Scope}  parent
-@returns {Scope}  */
-function make_scope(name, pos, end, parent) {
-	if (name.length === 0) {
-		return parent
-	}
-	/** @type {Scope} */
-	let new_scope = {
-		name:     name,
-		pos:      pos,
-		end:      end,
-		parent:   parent,
-		children: [],
-	}
-	parent.children.push(new_scope)
-	return new_scope
-}
-
 
 /**
  yields {@link scope} and each parent until {@link until}
@@ -452,63 +430,76 @@ function parse_patterns(t, patterns, scope) {
 /**
 @param   {Tokenizer2} t
 @param   {Pattern}   pattern
-@param   {Scope}     scope
+@param   {Scope}     parent
 @returns {boolean}   */
-function parse_pattern(t, pattern, scope) {
+function parse_pattern(t, pattern, parent) {
 
-	let start_pos_char = t.pos_char
-
-	// /** @type {Scope} */
-	// let scope = pattern.name.length === 0 ? parent : {
-	// 	name:     pattern.name,
-	// 	pos:      t.pos_char,
-	// 	end:      t.pos_char,
-	// 	parent:   parent,
-	// 	children: [],
-	// }
+	let pattern_scope = pattern.name.length === 0 ? parent : {
+		pos:      t.pos_char,
+		end:      parent.end,
+		name:     pattern.name,
+		parent:   parent,
+		children: [],
+	}
 
 	// only patterns
 	if (pattern.begin_match === null)
 	{
-		scope = make_scope(pattern.name, t.pos_char, scope.end, scope)
-
-		let res = parse_patterns(t, pattern.patterns, scope)
-
-		scope.end = t.pos_char
-		return res
+		let found = parse_patterns(t, pattern.patterns, pattern_scope)
+		if (pattern_scope !== parent) {
+			pattern_scope.end = t.pos_char
+			if (found) {
+				parent.children.push(pattern_scope)
+			}
+		}
+		return found
 	}
 
 	// begin
-	if (!match_captures_2(t, pattern.begin_match, pattern.begin_captures, scope))
+	if (!match_captures_2(t, pattern.begin_match, pattern.begin_captures, pattern_scope)) {
+		if (pattern_scope !== parent) {
+			pattern_scope.end = t.pos_char
+		}
 		return false
-
-	scope = make_scope(pattern.name, t.pos_char, scope.end, scope)
+	}
 
 	// begin-end (+patterns)
 	if (pattern.end_match != null) {
 
-		let content_scope = make_scope(pattern.content_name, t.pos_char, t.pos_char, scope)
+		let content_scope = pattern.content_name.length === 0 ? pattern_scope : {
+			pos:      t.pos_char,
+			end:      pattern_scope.end,
+			name:     pattern.content_name,
+			parent:   pattern_scope,
+			children: [],
+		}
 
 		while (t.pos_char < t.code.length) {
 			// end
-			if (match_captures_2(t, pattern.end_match, pattern.end_captures, scope)) {
+			if (match_captures_2(t, pattern.end_match, pattern.end_captures, pattern_scope)) {
 				break
 			}
 			// paterns
 			if (!parse_patterns(t, pattern.patterns, content_scope)) {
 				move_char_pos(t, 1)
 			}
-			content_scope.end = t.pos_char
+
+			if (content_scope !== pattern_scope) {
+				content_scope.end = t.pos_char
+			}
+		}
+
+		if (content_scope !== pattern_scope && content_scope.end !== content_scope.pos) {
+			pattern_scope.children.push(content_scope)
 		}
 	}
 
-	scope.end = t.pos_char
+	if (pattern_scope !== parent) {
+		pattern_scope.end = t.pos_char
+		parent.children.push(pattern_scope)
+	}
 
-	// Sometimes the all of the matches return a result full of look-acheads
-	// where each `result[0].length === 0`
-	// so the cursor doesn't move
-	// and can cause an infinite loop if `true` is returned
-	return start_pos_char !== t.pos_char
+	return true
 }
 
 /**

@@ -38,18 +38,27 @@ async function fetchLang() {
 @param   {string}   src
 @returns {HTMLElement} */
 function render_scope(scope, src) {
+
 	/** @type {HTMLElement} */ let header
+	/** @type {HTMLElement} */ let children
+
+	let scope_name = scope.name
+	if (scope_name.endsWith('.odin')) {
+		scope_name = scope_name.slice(0, -5)
+	}
 
     let container = h.div({class: 'scope-container'}, [
 		header = h.div({class: 'scope-header'},
-			`${scope.name} (${scope.pos}-${scope.end})`,
+			`${scope_name} (${scope.pos}-${scope.end})`,
 		),
-		h.div({class: 'scope-children'},
-			scope.children.map(child => render_scope(child, src))
-		)
+		children = h.div({class: 'scope-children'})
 	])
 
 	render_tooltip(header, src.slice(scope.pos, scope.end))
+
+	for (let child of scope.children) {
+		children.appendChild(render_scope(child, src))
+	}
 
     return container
 }
