@@ -553,7 +553,7 @@ function match_captures_2(t, regex, captures, parent) {
 					}
 					break
 				}
-				if (scope.parent == null || scope.parent === parent) {
+				if (scope.parent == null || scope === parent) {
 					break
 				}
 				scope = scope.parent
