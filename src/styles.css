@@ -128,11 +128,37 @@ code {
 	white-space: pre;
 }
 
+.tree-container {
+	position:         fixed;
+	top:              40px;
+	right:            10px;
+	width:            600px;
+	height:           calc(100vh - 40px*2);
+	overflow-y:       auto;
+	background-color: rgba(100, 100, 100, 0.5);
+	border:           1px solid #ccc;
+	padding:          10px;
+	box-shadow:       0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.scope-container {
+
+}
+.scope-header {
+
+}
+.scope-header:hover {
+	background-color: rgba(255, 255, 255, 0.1);
+}
+.scope-children {
+	padding-left: 2ch;
+}
+
 #loading_indicator {
 	position: fixed;
 	z-index: 100;
 	top: 2rem;
-	right: 2rem;
+	left: 2rem;
 	color: dodgerblue;
 }
 #loading_indicator::after {

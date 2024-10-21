@@ -134,7 +134,7 @@ export function validate_json_pattern(pattern) {
 
 /**
  @template T
- @param   {unknown}                           value 
+ @param   {unknown}                           value
  @param   {(v: unknown, i: number) => v is T} predicate
  @returns {value is T[]}                      */
 function validate_array(value, predicate) {
@@ -145,7 +145,7 @@ function validate_array(value, predicate) {
 
 /**
  @template T
- @param   {unknown}                value 
+ @param   {unknown}                value
  @param   {(v: unknown) => v is T} predicate
  @returns {value is Dict<T>}       */
 function validate_dict(value, predicate) {
@@ -178,7 +178,7 @@ export function json_to_grammar(json)
 }
 
 /**
-@param   {string} str 
+@param   {string} str
 @returns {RegExp} */
 function string_match_to_regex(str) {
 	return onigtojs.onigurumaToRegexp(str, {
@@ -203,16 +203,16 @@ function json_to_pattern(json, repo_json, repo)
 		end_captures  : null,
 		patterns      : [],
 	}
-	
+
 	switch (true) {
 	case json.match !== undefined:
-	{	
+	{
 		pattern.begin_match = string_match_to_regex(json.match)
 
 		if (json.name) pattern.name = json.name
-		
+
 		if (json.captures) pattern.begin_captures = json_to_captures(json.captures)
-		
+
 		break
 	}
 	case json.begin !== undefined && json.end !== undefined:
@@ -227,7 +227,7 @@ function json_to_pattern(json, repo_json, repo)
 		if (json.endCaptures) pattern.end_captures = json_to_captures(json.endCaptures)
 
 		if (json.patterns) pattern.patterns = json.patterns.map(p => json_to_pattern(p, repo_json, repo))
-		
+
 		break
 	}
 	case json.include !== undefined:
@@ -293,9 +293,89 @@ function json_to_captures(json)
  */
 
 /**
- @param   {string}  code
- @param   {Grammar} grammar
- @returns {Token[]} */
+ @typedef  {object}  Tokenizer2
+ @property {string}  code
+ @property {string}  line
+ @property {number}  pos_char
+ @property {number}  pos_line
+ @property {Token2[]} tokens // all leaf tokens (without children)
+ @property {Scope}   tree
+*/
+
+/**
+ @typedef  {object} Token2
+ @property {number} pos
+ @property {number} end
+ @property {Scope?} scope
+*/
+
+/**
+ @typedef  {object}  Scope
+ @property {string}  name
+ @property {number}  pos
+ @property {number}  end
+ @property {Scope?}  parent
+ @property {Scope[]} children
+*/
+
+/**
+@param   {string} name
+@param   {number} pos
+@param   {number} end
+@param   {Scope}  parent
+@returns {Scope}  */
+function make_scope(name, pos, end, parent) {
+	if (name.length === 0) {
+		return parent
+	}
+	/** @type {Scope} */
+	let new_scope = {
+		name:     name,
+		pos:      pos,
+		end:      end,
+		parent:   parent,
+		children: [],
+	}
+	parent.children.push(new_scope)
+	return new_scope
+}
+
+
+/**
+ yields {@link scope} and each parent until {@link until}
+
+@param   {Scope}   scope
+@param   {Scope?} [until]
+@returns {Generator<Scope>}
+*/
+function* each_scope(scope, until = null) {
+	for (;;) {
+		yield scope
+		if (scope.parent == null || scope.parent === until)
+			break
+		scope = scope.parent
+	}
+}
+
+/**
+@param   {Tokenizer2} t
+@param   {number}    n
+@returns {void}      */
+function move_char_pos(t, n) {
+	for (let i = t.pos_char+n-1; i >= t.pos_char; i--) {
+		if (t.code[i] === '\n') {
+			t.pos_line = i+1
+			t.line     = t.code.slice(t.pos_line)
+			break
+		}
+	}
+	t.pos_char = t.pos_char+n
+}
+
+/**
+@param   {string}  code
+@param   {Grammar} grammar
+@returns {Token[]} */
 export function code_to_tokens(code, grammar)
 {
 	let tokens = /** @type {Token[]} */ (new Array(code.length))
@@ -321,6 +401,176 @@ export function code_to_tokens(code, grammar)
 	}
 
 	return tokens.slice(0, t.len)
+}
+
+/**
+@param   {string}  code
+@param   {Grammar} grammar
+@returns {Scope} */
+export function parse_code(code, grammar) {
+
+	/** @type {Tokenizer2} */
+	let t = {
+		code:     code,
+		line:     code,
+		pos_char: 0,
+		pos_line: 0,
+		tokens:   [],
+		tree:     {
+			pos:      0,
+			end:      code.length,
+			name:     grammar.scope,
+			parent:   null,
+			children: [],
+		}
+	}
+
+	while (t.pos_char < t.code.length) {
+		if (!parse_patterns(t, grammar.patterns, t.tree)) {
+			move_char_pos(t, 1)
+		}
+	}
+
+	return t.tree
+}
+
+/**
+@param   {Tokenizer2} t
+@param   {Pattern[]} patterns
+@param   {Scope}     scope
+@returns {boolean} found */
+function parse_patterns(t, patterns, scope) {
+
+	for (let pattern of patterns) {
+		if (parse_pattern(t, pattern, scope)) {
+			return true
+		}
+	}
+	return false
+}
+
+/**
+@param   {Tokenizer2} t
+@param   {Pattern}   pattern
+@param   {Scope}     scope
+@returns {boolean}   */
+function parse_pattern(t, pattern, scope) {
+
+	let start_pos_char = t.pos_char
+
+	// /** @type {Scope} */
+	// let scope = pattern.name.length === 0 ? parent : {
+	// 	name:     pattern.name,
+	// 	pos:      t.pos_char,
+	// 	end:      t.pos_char,
+	// 	parent:   parent,
+	// 	children: [],
+	// }
+
+	// only patterns
+	if (pattern.begin_match === null)
+	{
+		scope = make_scope(pattern.name, t.pos_char, scope.end, scope)
+
+		let res = parse_patterns(t, pattern.patterns, scope)
+
+		scope.end = t.pos_char
+		return res
+	}
+
+	// begin
+	if (!match_captures_2(t, pattern.begin_match, pattern.begin_captures, scope))
+		return false
+
+	scope = make_scope(pattern.name, t.pos_char, scope.end, scope)
+
+	// begin-end (+patterns)
+	if (pattern.end_match != null) {
+
+		let content_scope = make_scope(pattern.content_name, t.pos_char, t.pos_char, scope)
+
+		while (t.pos_char < t.code.length) {
+			// end
+			if (match_captures_2(t, pattern.end_match, pattern.end_captures, scope)) {
+				break
+			}
+			// paterns
+			if (!parse_patterns(t, pattern.patterns, content_scope)) {
+				move_char_pos(t, 1)
+			}
+			content_scope.end = t.pos_char
+		}
+	}
+
+	scope.end = t.pos_char
+
+	// Sometimes the all of the matches return a result full of look-acheads
+	// where each `result[0].length === 0`
+	// so the cursor doesn't move
+	// and can cause an infinite loop if `true` is returned
+	return start_pos_char !== t.pos_char
+}
+
+/**
+@param   {Tokenizer2} t
+@param   {RegExp}    regex
+@param   {Captures?} captures
+@param   {Scope}     parent
+@returns {boolean} */
+function match_captures_2(t, regex, captures, parent) {
+
+	regex.lastIndex = t.pos_char-t.pos_line
+	let result = regex.exec(t.line)
+	if (result == null)
+		return false
+
+	let match_len = result[0].length
+	if (match_len === 0)
+		return false
+
+	if (captures != null) {
+
+		let scope = parent
+
+		for (let i = 0; i < result.length; i++) {
+
+			let indices = /** @type {RegExpIndicesArray} */(result.indices)[i]
+			let capture = captures[i]
+
+			if (indices == null || capture == null || capture.names.length === 0)
+				continue
+
+			let pos = indices[0] + t.pos_line
+			let end = indices[1] + t.pos_line
+
+			if (pos === end)
+				continue
+
+			for (;;) {
+				if (pos >= scope.pos && end <= scope.end) {
+					for (let name of capture.names) {
+						scope = {
+							name:     name,
+							pos:      pos,
+							end:      end,
+							parent:   scope,
+							children: [],
+						}
+						;/** @type {Scope} */(scope.parent).children.push(scope)
+					}
+					break
+				}
+				if (scope.parent == null || scope.parent === parent) {
+					break
+				}
+				scope = scope.parent
+			}
+		}
+	}
+
+	move_char_pos(t, match_len)
+
+	return true
 }
 
 /**
@@ -366,25 +616,24 @@ function pattern_to_tokens(t, pattern, parent_scopes)
 		let content_scopes = pattern.content_name.length > 0
 			? [...pattern_scopes, pattern.content_name]
 			: pattern_scopes
-	
+
 		loop:
 		while (t.pos_char < t.code.length) {
 			// end
 			pattern.end_match.lastIndex = t.pos_char-t.pos_line
-	
 			let end_result = pattern.end_match.exec(t.line)
 			if (end_result !== null) {
 				match_captures(t, end_result, pattern.end_captures, pattern_scopes)
 				break loop
 			}
-	
+
 			// patterns
 			for (let subpattern of pattern.patterns) {
 				if (pattern_to_tokens(t, subpattern, content_scopes)) {
 					continue loop
 				}
 			}
-	
+
 			increment_pos(t, content_scopes)
 		}
 	}
@@ -448,7 +697,7 @@ function match_captures(t, result, captures, pattern_scopes)
 		}
 	} else {
 		let ti_start = t.len
-	
+
 		t.tokens[t.len++] = {
 			pos:    match_pos,
 			end:    match_end,
@@ -456,34 +705,34 @@ function match_captures(t, result, captures, pattern_scopes)
 				? [...pattern_scopes, ...captures[0].names]
 				: pattern_scopes,
 		}
-	
+
 		for (let ri = 1; ri < result.length; ri++) {
-	
+
 			let indices = /** @type {RegExpIndicesArray} */(result.indices)[ri]
 			if (indices == null)
 				continue
-	
+
 			let capture = captures[ri]
 			if (capture == null || capture.names.length === 0)
 				continue
-	
+
 			let pos = indices[0] + t.pos_line
 			let end = indices[1] + t.pos_line
-	
+
 			// look ahead
 			if (end > match_end)
 				break
-	
+
 			for (let ti = t.len-1; ti >= ti_start; ti--) {
 				let prev = t.tokens[ti]
-	
+
 				/*
 				 [   prev token  ]
 					   [new]
 				   v  v  v  v  v
 				 [prev][new][prev]
 				*/
-	
+
 				if (pos >= prev.pos && end <= prev.end) {
 					t.tokens.splice(ti, 1, {
 						pos:    prev.pos,
@@ -543,7 +792,7 @@ export function json_to_theme_items(json, source_scope)
 		{
 			/*
 			parse selector
-			
+
 			' source meta.block >   child.scope'
 			 v v v v v v v v v v v v v v v v
 			['source', 'meta.block', '>', 'child.scope']
@@ -551,7 +800,7 @@ export function json_to_theme_items(json, source_scope)
 			*/
 			let selector = ['']
 			let is_space = false
-			
+
 			for (let char of selector_raw) {
 				switch (char) {
 				case ' ':
@@ -620,7 +869,7 @@ export function match_token_theme(token, theme, cache)
 		for (let i = item.selector.length-1; i >= 0; i -= 1)
 		{
 			let selector_part = item.selector[i]
-			
+
 			// direct child
 			if (selector_part === '>')
 			{
