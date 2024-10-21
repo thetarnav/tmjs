@@ -1,6 +1,7 @@
 // import * as shiki from 'shiki'
 // import getShikiWasm from 'shiki/wasm'
 import * as tm from './tm.js'
+import * as h  from './html.js'
 
 import {
 	THEME_JSON_WEBPATH,
@@ -33,44 +34,39 @@ async function fetchLang() {
 }
 
 /**
- * @param {tm.Scope} scope
- * @param {string}   src
- * @returns {HTMLElement}
- */
+@param   {tm.Scope} scope
+@param   {string}   src
+@returns {HTMLElement} */
 function render_scope(scope, src) {
-    const container = document.createElement('div')
-    container.className = 'scope-container'
+	/** @type {HTMLElement} */ let header
 
-    const header = document.createElement('div')
-    header.className = 'scope-header'
-    header.textContent = `${scope.name} (${scope.pos}-${scope.end})`
-    container.append(header)
+    let container = h.div({class: 'scope-container'}, [
+		header = h.div({class: 'scope-header'},
+			`${scope.name} (${scope.pos}-${scope.end})`,
+		),
+		h.div({class: 'scope-children'},
+			scope.children.map(child => render_scope(child, src))
+		)
+	])
 
 	render_tooltip(header, JSON.stringify(src.slice(scope.pos, scope.end)))
-
-    const children_container = document.createElement('div')
-    children_container.className = 'scope-children'
-    for (const child of scope.children) {
-        children_container.append(render_scope(child, src))
-    }
-    container.append(children_container)
 
     return container
 }
 
 /**
- * @param {tm.Scope} scope
- * @param {string}   src
- * @returns {void}
- */
+@param   {tm.Scope} scope
+@param   {string}   src
+@returns {void}   */
 function render_tree(scope, src) {
-	let container = root.appendChild(document.createElement('div'))
-	container.appendChild(render_scope(scope, src))
-	container.className = 'tree-container'
+	root.appendChild(
+		h.div({class: 'tree-container'},
+			render_scope(scope, src),
+		)
+	)
 }
 
-const tooltip_el = root.appendChild(document.createElement('div'))
-tooltip_el.className = 'scope-tooltip'
+const tooltip_el = root.appendChild(h.div({class: 'scope-tooltip'}))
 tooltip_el.style.visibility = 'hidden'
 
 let tooltip_scope_el = /** @type {HTMLElement?} */(null)
@@ -143,17 +139,14 @@ async function main() {
 			let token = tokens[i]
 			let settings = tm.match_token_theme(token, theme_items, settings_cache)
 
-			let token_el = document.createElement('span')
-			token_el.className = 'token'
-			elements[i] = token_el
+			let el = elements[i] = h.span({class: 'token'}, code.slice(token.pos, token.end))
 
-			token_el.textContent = code.slice(token.pos, token.end)
-			if (settings.foreground) token_el.style.color           = settings.foreground
-			if (settings.background) token_el.style.backgroundColor = settings.background
+			if (settings.foreground) el.style.color           = settings.foreground
+			if (settings.background) el.style.backgroundColor = settings.background
 			if (settings.fontStyle) {
-				if (settings.fontStyle === 'italic')    token_el.style.fontStyle      = 'italic'
-				if (settings.fontStyle === 'bold')      token_el.style.fontWeight     = 'bold'
-				if (settings.fontStyle === 'underline') token_el.style.textDecoration = 'underline'
+				if (settings.fontStyle === 'italic')    el.style.fontStyle      = 'italic'
+				if (settings.fontStyle === 'bold')      el.style.fontWeight     = 'bold'
+				if (settings.fontStyle === 'underline') el.style.textDecoration = 'underline'
 			}
 
 			/*
@@ -168,12 +161,10 @@ async function main() {
 				scopes_str += scope + '\n'
 			}
 
-			render_tooltip(token_el, scopes_str)
+			render_tooltip(el, scopes_str)
 		}
 
-		const shiki_el = root.appendChild(document.createElement('div'))
-		shiki_el.className = 'shiki'
-		shiki_el.append(...elements)
+		root.appendChild(h.div({class: 'shiki'}, elements))
 	}
 	else {
 		const highlighter_promise = shiki.getHighlighterCore({
