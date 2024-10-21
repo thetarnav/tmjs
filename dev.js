@@ -10,11 +10,13 @@ import * as ws       from "ws"
 import {
 	HTTP_PORT, WEB_SOCKET_PORT,
 	THEME_JSONC_FILENAME, THEME_JSON_WEBPATH,
+	THEME_JSON_FILENAME,
 } from "./src/constants.js"
 
 const dirname          = path.dirname(url.fileURLToPath(import.meta.url))
 const src_path         = path.join(dirname, "src")
 const theme_jsonc_path = path.join(src_path, THEME_JSONC_FILENAME)
+const theme_json_path  = path.join(src_path, THEME_JSON_FILENAME)
 
 http.createServer(requestListener).listen(HTTP_PORT)
 console.log(`Server running at http://127.0.0.1:${HTTP_PORT}`)
@@ -22,27 +24,27 @@ console.log(`Server running at http://127.0.0.1:${HTTP_PORT}`)
 const wss = new ws.WebSocketServer({port: WEB_SOCKET_PORT})
 console.log("WebSocket server running at http://127.0.0.1:" + WEB_SOCKET_PORT)
 
-/** @type {Promise<string>} */
-let last_theme_json = buildTheme()
+/** @type {Promise<void>} */
+let theme_promise = buildTheme()
 
 let watcher = chokidar.watch('src')
 
 watcher.on("change", filename => {
 	if (path.join(dirname, filename) === theme_jsonc_path) {
-		last_theme_json = buildTheme()
+		theme_promise = buildTheme()
 	}
 	for (const client of wss.clients) {
 		client.send(filename)
 	}
 })
 
-/** @returns {Promise<string>} */
+/** @returns {Promise<void>} */
 async function buildTheme() {
-	const theme_jsonc = await fsp.readFile(theme_jsonc_path, "utf8")
-	const theme = jsonc.parse(theme_jsonc)
-	return JSON.stringify(theme, null, 4)
+	let theme_jsonc = await fsp.readFile(theme_jsonc_path, "utf8")
+	let theme       = jsonc.parse(theme_jsonc)
+	let theme_json  = JSON.stringify(theme, null, '\t')
+	await fsp.writeFile(theme_json_path, theme_json)
 }
-
 
 /**
 @param   {http.IncomingMessage} req
@@ -62,12 +64,7 @@ async function requestListener(req, res) {
 	Generated files
 	*/
 	if (req.url === THEME_JSON_WEBPATH) {
-		let theme_json = await last_theme_json
-		res.writeHead(200, {"Content-Type": "application/json"})
-		res.end(theme_json)
-
-		console.log(`${req.method} ${req.url} 200`)
-		return
+		await theme_promise
 	}
 
 	/*
