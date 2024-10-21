@@ -1,5 +1,3 @@
-import * as onigtojs from 'oniguruma-to-js'
-
 /*
 
 TODOs
@@ -181,10 +179,7 @@ export function json_to_grammar(json)
 @param   {string} str
 @returns {RegExp} */
 function string_match_to_regex(str) {
-	return onigtojs.onigurumaToRegexp(str, {
-		flags: 'ydm',
-		ignoreContiguousAnchors: true,
-	})
+	return new RegExp(str, 'ydm')
 }
 
 /**
@@ -818,10 +813,10 @@ export function json_to_theme_items(json, source_scope)
 /** @typedef {Map<string, JSON_Theme_Settings>} Scope_Theme_Settings_Cache */
 
 /**
- @param   {Token}                      token
- @param   {Theme_Item[]}               theme
- @param   {Scope_Theme_Settings_Cache} cache
- @returns {JSON_Theme_Settings}        */
+@param   {Token}                      token
+@param   {Theme_Item[]}               theme
+@param   {Scope_Theme_Settings_Cache} cache
+@returns {JSON_Theme_Settings}        */
 export function match_token_theme(token, theme, cache)
 {
 	let cache_string = token.scopes.join(' ')

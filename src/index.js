@@ -14,7 +14,7 @@ const loading_indicator = /** @type {HTMLElement} */ (document.getElementById('l
 
 const hash = location.hash.slice(1) || 'odin'
 const CODE_WEBPATH = hash === 'ts' ? SAMPLE_WEBPATH_TS : SAMPLE_WEBPATH_ODIN
-const LANG_WEBPATH = hash === 'ts' ? LANG_WEBPATH_TS   : LANG_WEBPATH_ODIN
+const LANG_WEBPATH = hash === 'ts' ? '/lang_ts.json' : '/lang_odin.json'
 
 let code_promise  = fetchCode()
 let theme_promise = fetchTheme()
