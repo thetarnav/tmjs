@@ -290,13 +290,11 @@ function json_to_captures(json)
  */
 
 /**
- @typedef  {object}  Tokenizer2
- @property {string}  code
- @property {string}  line
- @property {number}  pos_char
- @property {number}  pos_line
- @property {Token2[]} tokens // all leaf tokens (without children)
- @property {Scope}   tree
+ @typedef  {object} Tokenizer2
+ @property {string} code
+ @property {string} line
+ @property {number} pos_char
+ @property {number} pos_line
 */
 
 /**
@@ -392,23 +390,24 @@ export function parse_code(code, grammar) {
 		line:     code,
 		pos_char: 0,
 		pos_line: 0,
-		tokens:   [],
-		tree:     {
-			pos:      0,
-			end:      0,
-			name:     grammar.scope,
-			parent:   null,
-			children: [],
-		}
+	}
+
+	/** @type {Scope} */
+	let root = {
+		pos:      0,
+		end:      0,
+		name:     grammar.scope,
+		parent:   null,
+		children: [],
 	}
 
 	while (t.pos_char < t.code.length) {
-		if (!parse_patterns(t, grammar.patterns, t.tree)) {
-			move_char_pos(t, 1, t.tree)
+		if (!parse_patterns(t, grammar.patterns, root)) {
+			move_char_pos(t, 1, root)
 		}
 	}
 
-	return t.tree
+	return root
 }
 
 /**
