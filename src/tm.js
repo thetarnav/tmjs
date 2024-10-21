@@ -447,11 +447,9 @@ function parse_pattern(t, pattern, parent) {
 	if (pattern.begin_match === null)
 	{
 		let found = parse_patterns(t, pattern.patterns, pattern_scope)
-		if (pattern_scope !== parent) {
+		if (found && pattern_scope !== parent) {
 			pattern_scope.end = t.pos_char
-			if (found) {
-				parent.children.push(pattern_scope)
-			}
+			parent.children.push(pattern_scope)
 		}
 		return found
 	}
@@ -497,6 +495,10 @@ function parse_pattern(t, pattern, parent) {
 		parent.children.push(pattern_scope)
 	}
 
+	// Sometimes the all of the matches return a result full of look-acheads
+	// where each `result[0].length === 0`
+	// so the cursor doesn't move
+	// and can cause an infinite loop if `true` is returned
 	return start_char_pos !== t.pos_char
 }
 
