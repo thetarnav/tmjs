@@ -490,16 +490,18 @@ function parse_pattern(t, pattern, parent) {
 		}
 	}
 
-	if (pattern_scope !== parent) {
+	// Sometimes the all of the matches return a result full of look-acheads
+	// where each result is empty but successful
+	// so the cursor doesn't move
+	// and can cause an infinite loop if `true` is returned
+	let success = start_char_pos !== t.pos_char
+
+	if (success && pattern_scope !== parent) {
 		pattern_scope.end = t.pos_char
 		parent.children.push(pattern_scope)
 	}
 
-	// Sometimes the all of the matches return a result full of look-acheads
-	// where each `result[0].length === 0`
-	// so the cursor doesn't move
-	// and can cause an infinite loop if `true` is returned
-	return start_char_pos !== t.pos_char
+	return success
 }
 
 /**
