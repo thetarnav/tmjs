@@ -252,9 +252,6 @@ function json_to_pattern(json, repo_json, repo)
 	{
 		if (json.patterns) pattern.patterns = json.patterns.map(p => json_to_pattern(p, repo_json, repo))
 
-		if (json.name) pattern.name = json.name
-		if (json.contentName) pattern.content_name = json.contentName
-
 		break
 	}
 	}
@@ -436,6 +433,11 @@ function parse_patterns(t, patterns, scope) {
 @returns {boolean}   */
 function parse_pattern(t, pattern, parent) {
 
+	// only patterns
+	if (pattern.begin_match === null) {
+		return parse_patterns(t, pattern.patterns, parent)
+	}
+
 	let pattern_start_pos = t.pos_char
 	let pattern_scope = pattern.name.length === 0 ? parent : {
 		pos:      t.pos_char,
@@ -443,16 +445,6 @@ function parse_pattern(t, pattern, parent) {
 		name:     pattern.name,
 		parent:   parent,
 		children: [],
-	}
-
-	// only patterns
-	if (pattern.begin_match === null)
-	{
-		let found = parse_patterns(t, pattern.patterns, pattern_scope)
-		if (found && pattern_scope !== parent) {
-			parent.children.push(pattern_scope)
-		}
-		return found
 	}
 
 	// begin
