@@ -457,9 +457,6 @@ function parse_pattern(t, pattern, parent) {
 
 	// begin
 	if (!match_captures_2(t, pattern.begin_match, pattern.begin_captures, pattern_scope)) {
-		if (pattern_scope !== parent) {
-			pattern_scope.end = t.pos_char
-		}
 		return false
 	}
 
