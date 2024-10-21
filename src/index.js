@@ -133,8 +133,6 @@ async function main() {
 			let tree = tm.parse_code(code, grammar)
 			render_tree(tree, code)
 		})
-		
-		const scopes_map = new Map()
 
 		/** @type {HTMLElement[]} */
 		let elements = new Array(tokens.length)
@@ -170,7 +168,6 @@ async function main() {
 				scopes_str += scope + '\n'
 			}
 
-			scopes_map.set(token_el, scopes_str)
 			render_tooltip(token_el, scopes_str)
 		}
 
