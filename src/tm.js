@@ -434,6 +434,7 @@ function parse_patterns(t, patterns, scope) {
 @returns {boolean}   */
 function parse_pattern(t, pattern, parent) {
 
+	let start_char_pos = t.pos_char
 	let pattern_scope = pattern.name.length === 0 ? parent : {
 		pos:      t.pos_char,
 		end:      parent.end,
@@ -496,7 +497,7 @@ function parse_pattern(t, pattern, parent) {
 		parent.children.push(pattern_scope)
 	}
 
-	return true
+	return start_char_pos !== t.pos_char
 }
 
 /**
@@ -514,7 +515,7 @@ function match_captures_2(t, regex, captures, parent) {
 
 	let match_len = result[0].length
 	if (match_len === 0)
-		return false
+		return true
 
 	if (captures != null) {
 
