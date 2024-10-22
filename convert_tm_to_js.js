@@ -4,12 +4,20 @@ import * as onigtojs from 'oniguruma-to-js'
 /**
 @param   {string} str 
 @returns {string} */
-function convert_regex_str(str) {
-	
+function convert_regex_str(str) {	
 	return onigtojs.onigurumaToRegexp(str, {
 		flags: 'ydm',
 		ignoreContiguousAnchors: true,
 	}).source
+}
+
+/**
+@param   {string} key 
+@returns {boolean} */
+function is_regex_key(key) {
+	return key === 'match' ||
+	       key === 'begin' ||
+	       key === 'end'
 }
 
 /**
@@ -26,7 +34,8 @@ function convert_json_regexes(json_obj) {
 
 		for (let [key, value] of Object.entries(json_obj)) {
 
-			if (['match', 'begin', 'end'].includes(key) && typeof value === 'string') {
+			if (is_regex_key(key) && typeof value === 'string') {
+				// @ts-expect-error
 				json_obj[key] = convert_regex_str(value)
 			} else {
 				convert_json_regexes(value)
