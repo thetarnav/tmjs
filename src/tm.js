@@ -510,15 +510,15 @@ function match_captures_2(t, regex, captures, match_parent) {
 	/*
 	 Find a parent scope for each capture
 
-	 [foo := _ -> bar;;]  match_parent
-	 [foo := _ -> bar;;]  (0) → match_parent
-	 [foo] ↑    ↑     ↑   (1) → parent(0)
-	     [:=]   ↑     ↑   (2) → try(1) → parent(0)
-	        [_ -> bar]↑   (3) → try(2) → parent(0)
-	        [_] ↑  ↑  ↑   (4) → parent(3)
-	          [->] ↑  ↑   (5) → try(4) → parent(3)
-	             [bar]↑   (6) → try(5) → parent(3)
-	                [;;]  (7) → try(6) → try(3) → parent(0)
+	 [foo := baz -> bar;;]  match_parent
+	 [foo := baz -> bar;;]  (0) → match_parent
+	 [foo] ↑      ↑     ↑   (1) → parent(0)
+	     [:=]     ↑     ↑   (2) → try(1) → parent(0)
+	        [baz -> bar]↑   (3) → try(2) → parent(0)
+	        [baz] ↑  ↑  ↑   (4) → parent(3)
+	            [->] ↑  ↑   (5) → try(4) → parent(3)
+	               [bar]↑   (6) → try(5) → parent(3)
+	                  [;;]  (7) → try(6) → try(3) → parent(0)
 	*/
 	let scope = match_parent
 

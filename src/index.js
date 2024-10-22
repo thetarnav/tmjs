@@ -33,11 +33,15 @@ async function fetchLang() {
 	return fetch(LANG_WEBPATH).then(res => res.json())
 }
 
+let count_scopes = 0
+
 /**
 @param   {tm.Scope} scope
 @param   {string}   src
 @returns {HTMLElement} */
 function render_scope(scope, src) {
+
+	count_scopes++
 
 	/** @type {HTMLElement} */ let header
 	/** @type {HTMLElement} */ let children
@@ -73,6 +77,7 @@ function render_tree(scope, src) {
 			render_scope(scope, src),
 		)
 	)
+	console.log(count_scopes)
 }
 
 /**
