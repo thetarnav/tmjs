@@ -11,12 +11,16 @@ import {
 	HTTP_PORT, WEB_SOCKET_PORT,
 	THEME_JSONC_FILENAME, THEME_JSON_WEBPATH,
 	THEME_JSON_FILENAME,
-} from "./src/constants.js"
+} from "./dev/constants.js"
+
+const SITE_DIRNAME     = 'dev'
+const SRC_DIRNAME      = 'src'
 
 const dirname          = path.dirname(url.fileURLToPath(import.meta.url))
-const src_path         = path.join(dirname, "src")
-const theme_jsonc_path = path.join(src_path, THEME_JSONC_FILENAME)
-const theme_json_path  = path.join(src_path, THEME_JSON_FILENAME)
+const site_path        = path.join(dirname, SITE_DIRNAME)
+const src_path         = path.join(dirname, SRC_DIRNAME)
+const theme_jsonc_path = path.join(site_path, THEME_JSONC_FILENAME)
+const theme_json_path  = path.join(site_path, THEME_JSON_FILENAME)
 
 http.createServer(requestListener).listen(HTTP_PORT)
 console.log(`Server running at http://127.0.0.1:${HTTP_PORT}`)
@@ -27,7 +31,7 @@ console.log("WebSocket server running at http://127.0.0.1:" + WEB_SOCKET_PORT)
 /** @type {Promise<void>} */
 let theme_promise = buildTheme()
 
-let watcher = chokidar.watch('src')
+let watcher = chokidar.watch([src_path, site_path])
 
 watcher.on("change", filename => {
 	if (path.join(dirname, filename) === theme_jsonc_path) {
@@ -68,24 +72,10 @@ async function requestListener(req, res) {
 	}
 
 	/*
-	Static files
+	HTML
 	*/
-	let relative_filepath = toWebFilepath(req.url)
-	let filepath = relative_filepath.startsWith("/node_modules/")
-		? path.join(dirname, relative_filepath)
-		: path.join(src_path, relative_filepath)
-
-	let exists = await fileExists(filepath)
-	if (!exists) {
-		res.writeHead(404)
-		res.end()
-	
-		console.log(`${req.method} ${req.url} 404`)
-		return
-	}
-
-	if (relative_filepath === "/index.html") {
-		let html = await fsp.readFile(filepath, "utf8")
+	if (req.url === "/") {
+		let html = await fsp.readFile('index.html', "utf8")
 		html += `
 <script>
 	const socket = new WebSocket("ws://localhost:${WEB_SOCKET_PORT}");
@@ -97,6 +87,21 @@ async function requestListener(req, res) {
 		res.end(html)
 
 		console.log(`${req.method} ${req.url} 200`)
+		return
+	}
+
+	/*
+	Static files
+	*/
+	let relative_filepath = toWebFilepath(req.url)
+	let filepath = path.join(dirname, relative_filepath)
+
+	let exists = await fileExists(filepath)
+	if (!exists) {
+		res.writeHead(404)
+		res.end()
+	
+		console.log(`${req.method} ${req.url} 404`)
 		return
 	}
 

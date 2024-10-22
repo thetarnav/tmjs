@@ -7,41 +7,41 @@ settings:
 importers:
 
   .:
-    dependencies:
-      '@shikijs/core':
-        specifier: ^1.6.5
-        version: 1.22.0
-      chokidar:
-        specifier: ^4.0.1
-        version: 4.0.1
-      jsonc-parser:
-        specifier: ^3.2.1
-        version: 3.3.1
+    optionalDependencies:
       oniguruma-to-js:
         specifier: ^0.4.3
         version: 0.4.3
-      regex:
-        specifier: ^4.3.3
-        version: 4.3.3
-      shiki:
+    devDependencies:
+      '@shikijs/core':
         specifier: ^1.6.5
         version: 1.22.0
-      vscode-oniguruma:
-        specifier: ^2.0.1
-        version: 2.0.1
-      ws:
-        specifier: ^8.16.0
-        version: 8.18.0
-    devDependencies:
       '@types/node':
         specifier: ^22.7.7
         version: 22.7.7
       '@types/ws':
         specifier: ^8.5.10
         version: 8.5.12
+      chokidar:
+        specifier: ^4.0.1
+        version: 4.0.1
+      jsonc-parser:
+        specifier: ^3.2.1
+        version: 3.3.1
+      regex:
+        specifier: ^4.3.3
+        version: 4.3.3
+      shiki:
+        specifier: ^1.6.5
+        version: 1.22.0
       typescript:
         specifier: ^5.3.3
         version: 5.6.3
+      vscode-oniguruma:
+        specifier: ^2.0.1
+        version: 2.0.1
+      ws:
+        specifier: ^8.16.0
+        version: 8.18.0
 
 packages:
 

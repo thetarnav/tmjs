@@ -1,23 +1,27 @@
 {
-	"name": "syntax-playground",
+	"name": "@nothing-but/tm",
 	"version": "0.0.0",
 	"type": "module",
-	"private": true,
 	"license": "MIT",
 	"scripts": {
 		"dev": "node dev.js"
 	},
-	"dependencies": {
+	"files": [
+		"src/*",
+		"types/*"
+	],
+	"optionalDependencies": {
+		"oniguruma-to-js": "^0.4.3"
+	},
+	"devDependencies": {
+		"oniguruma-to-js": "^0.4.3",
 		"@shikijs/core": "^1.6.5",
 		"chokidar": "^4.0.1",
 		"jsonc-parser": "^3.2.1",
-		"oniguruma-to-js": "^0.4.3",
 		"regex": "^4.3.3",
 		"shiki": "^1.6.5",
 		"vscode-oniguruma": "^2.0.1",
-		"ws": "^8.16.0"
-	},
-	"devDependencies": {
+		"ws": "^8.16.0",
 		"@types/node": "^22.7.7",
 		"@types/ws": "^8.5.10",
 		"typescript": "^5.3.3"

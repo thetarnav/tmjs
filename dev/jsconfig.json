@@ -2,5 +2,6 @@
 	"extends": "../jsconfig.json",
 	"compilerOptions": {
 		"types": [],
+		"lib": ["ESNext", "DOM"]
 	}
 }
