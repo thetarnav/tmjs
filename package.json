@@ -28,11 +28,8 @@
 	},
 	"devDependencies": {
 		"oniguruma-to-js": "^0.4.3",
-		"@shikijs/core": "^1.6.5",
 		"chokidar": "^4.0.1",
 		"jsonc-parser": "^3.2.1",
-		"regex": "^4.3.3",
-		"shiki": "^1.6.5",
 		"vscode-oniguruma": "^2.0.1",
 		"ws": "^8.16.0",
 		"@types/node": "^22.7.7",

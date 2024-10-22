@@ -411,9 +411,9 @@ export function parse_code(code, grammar) {
 
 /**
 @param   {Tokenizer2} t
-@param   {Pattern[]} patterns
-@param   {Scope}     scope
-@returns {boolean} found */
+@param   {Pattern[]}  patterns
+@param   {Scope}      scope
+@returns {boolean}    found */
 function parse_patterns(t, patterns, scope) {
 
 	for (let pattern of patterns) {
@@ -426,9 +426,9 @@ function parse_patterns(t, patterns, scope) {
 
 /**
 @param   {Tokenizer2} t
-@param   {Pattern}   pattern
-@param   {Scope}     parent
-@returns {boolean}   */
+@param   {Pattern}    pattern
+@param   {Scope}      parent
+@returns {boolean}    */
 function parse_pattern(t, pattern, parent) {
 
 	// only patterns
