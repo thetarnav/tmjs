@@ -488,9 +488,9 @@ function parse_pattern(t, pattern, parent) {
 
 /**
 @param   {Tokenizer2} t
-@param   {RegExp}    regex
-@param   {Captures?} captures
-@param   {Scope}     match_parent
+@param   {RegExp}     regex
+@param   {Captures?}  captures
+@param   {Scope}      match_parent
 @returns {boolean} */
 function match_captures_2(t, regex, captures, match_parent) {
 
@@ -499,48 +499,58 @@ function match_captures_2(t, regex, captures, match_parent) {
 	if (result == null)
 		return false
 
-	let match_len = result[0].length
-	let match_end = t.pos_char+match_len
+	// Set the len of match_parent
+	// and move the cursor (changes pos_line!)
+	let pos_line = t.pos_line
+	move_char_pos(t, result[0].length, match_parent)
 
-	if (captures != null) {
+	if (captures == null)
+		return true
 
-		let scope = match_parent
+	/*
+	 Find a parent scope for each capture
 
-		for (let i = 0; i < result.length; i++) {
+	 [foo := _ -> bar;;]  match_parent
+	 [foo := _ -> bar;;]  (0) → match_parent
+	 [foo] ↑    ↑     ↑   (1) → parent(0)
+	     [:=]   ↑     ↑   (2) → try(1) → parent(0)
+	        [_ -> bar]↑   (3) → try(2) → parent(0)
+	        [_] ↑  ↑  ↑   (4) → parent(3)
+	          [->] ↑  ↑   (5) → try(4) → parent(3)
+	             [bar]↑   (6) → try(5) → parent(3)
+	                [;;]  (7) → try(6) → try(3) → parent(0)
+	*/
+	let scope = match_parent
 
-			let indices = /** @type {RegExpIndicesArray} */(result.indices)[i]
-			let capture = captures[i]
+	for (let i = 0; i < result.length; i++) {
 
-			if (indices == null || capture == null || capture.names.length === 0)
-				continue
+		let indices = /** @type {RegExpIndicesArray} */(result.indices)[i]
+		let capture = captures[i]
 
-			let pos = indices[0] + t.pos_line
-			let end = indices[1] + t.pos_line
+		if (indices == null || capture == null || capture.names.length === 0)
+			continue
 
-			if (pos === end)
-				continue
+		let pos = indices[0] + pos_line
+		let end = indices[1] + pos_line
 
-			// look ahead
-			if (end > match_end)
+		if (pos === end)
+			continue
+
+		for (;;) {
+			if (pos >= scope.pos && end <= scope.end) {
+				for (let name of capture.names) {
+					let parent = scope
+					parent.children.push(scope = {name, pos, end, parent, children: []})
+				}
 				break
-
-			for (;;) {
-				if (scope === match_parent || (pos >= scope.pos && end <= scope.end)) {
-					for (let name of capture.names) {
-						let parent = scope
-						parent.children.push(scope = {name, pos, end, parent, children: []})
-					}
-					break
-				}
-				if (scope.parent == null || scope === match_parent) {
-					break
-				}
-				scope = scope.parent
 			}
+			if (scope.parent == null || scope === match_parent) {
+				break
+			}
+			scope = scope.parent
 		}
 	}
 
-	move_char_pos(t, match_len, match_parent)
 	return true
 }
 
