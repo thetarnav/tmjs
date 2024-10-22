@@ -12,7 +12,7 @@ export const SITE_DIRNAME         = 'dev'
 export const SRC_DIRNAME          = 'src'
 export const TYPES_DIRNAME        = 'types'
 
-export const SITE_WEBPATH         = '/'+SITE_DIRNAME+'/'
+export const SITE_WEBPATH         = SITE_DIRNAME+'/'
 
 export const THEME_JSON_WEBPATH   = SITE_WEBPATH+THEME_JSON_FILENAME
 export const LANG_WEBPATH_ODIN    = SITE_WEBPATH+LANG_FILENAME_ODIN
