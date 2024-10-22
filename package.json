@@ -1,8 +1,10 @@
 {
-	"name": "@nothing-but/tm",
+	"name": "tmjs",
 	"version": "0.0.0",
 	"type": "module",
 	"license": "MIT",
+	"private": false,
+	"sideEffects": false,
 	"files": [
 		"src/*",
 		"types/*"
