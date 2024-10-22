@@ -10,11 +10,8 @@ import * as ws       from "ws"
 import {
 	HTTP_PORT, WEB_SOCKET_PORT,
 	THEME_JSONC_FILENAME, THEME_JSON_WEBPATH,
-	THEME_JSON_FILENAME,
-} from "./dev/constants.js"
-
-const SITE_DIRNAME     = 'dev'
-const SRC_DIRNAME      = 'src'
+	THEME_JSON_FILENAME, SRC_DIRNAME, SITE_DIRNAME,
+} from "./constants.js"
 
 const dirname          = path.dirname(url.fileURLToPath(import.meta.url))
 const site_path        = path.join(dirname, SITE_DIRNAME)
@@ -100,7 +97,7 @@ async function requestListener(req, res) {
 	if (!exists) {
 		res.writeHead(404)
 		res.end()
-	
+
 		console.log(`${req.method} ${req.url} 404`)
 		return
 	}

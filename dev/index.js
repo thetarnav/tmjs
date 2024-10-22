@@ -7,7 +7,7 @@ import {
 	THEME_JSON_WEBPATH,
 	SAMPLE_WEBPATH_ODIN, SAMPLE_WEBPATH_TS,
 	LANG_WEBPATH_ODIN, LANG_WEBPATH_TS,
-} from './constants.js'
+} from '../constants.js'
 
 const root =              /** @type {HTMLElement} */ (document.getElementById('root'))
 const loading_indicator = /** @type {HTMLElement} */ (document.getElementById('loading_indicator'))
@@ -147,7 +147,7 @@ function render_tooltip(el, text) {
 			tooltip_el.textContent = text
 			tooltip_text = text
 		}
-		
+
 		tooltip_scope_el = el
 		tooltip_el.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`
 		tooltip_el.style.maxWidth  = `${window.innerWidth - e.clientX}px`
@@ -179,7 +179,7 @@ async function main() {
 	}
 
 	let grammar = tm.json_to_grammar(lang)
-	
+
 	let theme_items = tm.json_to_theme_items(theme.tokenColors || [], grammar.scope)
 	let tokens      = tm.code_to_tokens(code, grammar)
 	render_tokens(tokens, theme_items, code)

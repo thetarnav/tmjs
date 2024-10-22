@@ -3,13 +3,25 @@
 	"version": "0.0.0",
 	"type": "module",
 	"license": "MIT",
-	"scripts": {
-		"dev": "node dev.js"
-	},
 	"files": [
 		"src/*",
 		"types/*"
 	],
+	"module": "./src/tm.js",
+	"types": "./types/tm.d.ts",
+	"exports": {
+		"import": {
+			"types": "./types/tm.d.ts",
+			"default": "./src/tm.js"
+		}
+	},
+	"scripts": {
+		"dev": "node --watch ./dev.js",
+		"typecheck": "tsc --noEmit",
+		"build": "node ./build.js",
+		"prepublishOnly": "node ./build.js",
+		"postpublish": "rm smd.d.* smd.min.js"
+	},
 	"optionalDependencies": {
 		"oniguruma-to-js": "^0.4.3"
 	},

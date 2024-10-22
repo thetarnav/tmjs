@@ -10,6 +10,7 @@ export const SAMPLE_FILENAME_TS   = 'sample.ts'
 
 export const SITE_DIRNAME         = 'dev'
 export const SRC_DIRNAME          = 'src'
+export const TYPES_DIRNAME        = 'types'
 
 export const SITE_WEBPATH         = '/'+SITE_DIRNAME+'/'
 
