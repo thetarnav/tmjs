@@ -288,8 +288,9 @@ function json_to_captures(json)
  @typedef  {object} Tokenizer2
  @property {string} code
  @property {string} line
- @property {number} pos_char
- @property {number} pos_line
+ @property {number} line_pos
+ @property {number} line_end
+ @property {number} char_pos
 */
 
 /**
@@ -331,15 +332,15 @@ function* each_scope(scope, until = null) {
 @param   {Scope}      scope
 @returns {void}      */
 function move_char_pos(t, n, scope) {
-	for (let i = t.pos_char+n-1; i >= t.pos_char; i--) {
-		if (t.code[i] === '\n') {
-			t.pos_line = i+1
-			t.line     = t.code.slice(t.pos_line)
-			break
-		}
+
+	t.char_pos += n
+	scope.end = t.char_pos
+
+	if (t.char_pos >= t.line_end) {
+		t.line_pos = t.line_end
+		while (t.line_end++ < t.code.length && t.code[t.line_end] !== '\n') {}
+		t.line = t.code.slice(t.line_pos, t.line_end)
 	}
-	t.pos_char = t.pos_char+n
-	scope.end  = t.pos_char
 }
 
 /**
@@ -382,9 +383,10 @@ export function parse_code(code, grammar) {
 	/** @type {Tokenizer2} */
 	let t = {
 		code:     code,
-		line:     code,
-		pos_char: 0,
-		pos_line: 0,
+		line:     '',
+		char_pos: 0,
+		line_end: 0,
+		line_pos: 0,
 	}
 
 	/** @type {Scope} */
@@ -396,7 +398,9 @@ export function parse_code(code, grammar) {
 		children: [],
 	}
 
-	while (t.pos_char < t.code.length) {
+	move_char_pos(t, 0, root)
+
+	while (t.char_pos < t.code.length) {
 		if (!parse_patterns(t, grammar.patterns, root)) {
 			move_char_pos(t, 1, root)
 		}
@@ -432,10 +436,10 @@ function parse_pattern(t, pattern, parent) {
 		return parse_patterns(t, pattern.patterns, parent)
 	}
 
-	let pattern_start_pos = t.pos_char
+	let pattern_start_pos = t.char_pos
 	let pattern_scope = pattern.name.length === 0 ? parent : {
-		pos:      t.pos_char,
-		end:      t.pos_char,
+		pos:      t.char_pos,
+		end:      t.char_pos,
 		name:     pattern.name,
 		parent:   parent,
 		children: [],
@@ -450,14 +454,14 @@ function parse_pattern(t, pattern, parent) {
 	if (pattern.end_match != null) {
 
 		let content_scope = pattern.content_name.length === 0 ? pattern_scope : {
-			pos:      t.pos_char,
-			end:      t.pos_char,
+			pos:      t.char_pos,
+			end:      t.char_pos,
 			name:     pattern.content_name,
 			parent:   pattern_scope,
 			children: [],
 		}
 
-		while (t.pos_char < t.code.length) {
+		while (t.char_pos < t.code.length) {
 			// end
 			if (match_captures_2(t, pattern.end_match, pattern.end_captures, pattern_scope)) {
 				break
@@ -477,7 +481,7 @@ function parse_pattern(t, pattern, parent) {
 	// where each result is empty but successful
 	// so the cursor doesn't move
 	// and can cause an infinite loop if `true` is returned
-	let success = pattern_start_pos !== t.pos_char
+	let success = pattern_start_pos !== t.char_pos
 
 	if (success && pattern_scope !== parent) {
 		parent.children.push(pattern_scope)
@@ -494,14 +498,14 @@ function parse_pattern(t, pattern, parent) {
 @returns {boolean} */
 function match_captures_2(t, regex, captures, match_parent) {
 
-	regex.lastIndex = t.pos_char-t.pos_line
+	regex.lastIndex = t.char_pos-t.line_pos
 	let result = regex.exec(t.line)
 	if (result == null)
 		return false
 
 	// Set the len of match_parent
-	// and move the cursor (changes pos_line!)
-	let pos_line = t.pos_line
+	// and move the cursor (changes line_pos!)
+	let line_pos = t.line_pos
 	move_char_pos(t, result[0].length, match_parent)
 
 	if (captures == null)
@@ -530,8 +534,8 @@ function match_captures_2(t, regex, captures, match_parent) {
 		if (indices == null || capture == null || capture.names.length === 0)
 			continue
 
-		let pos = indices[0] + pos_line
-		let end = indices[1] + pos_line
+		let pos = indices[0] + line_pos
+		let end = indices[1] + line_pos
 
 		if (pos === end)
 			continue
