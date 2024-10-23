@@ -336,6 +336,7 @@ function move_char_pos(t, n, scope) {
 	if (t.char_pos >= t.line_end) {
 		t.line_pos = t.line_end
 		while (t.line_end++ < t.code.length && t.code[t.line_end] !== '\n') {}
+		t.line_end++
 		t.line = t.code.slice(t.line_pos, t.line_end)
 	}
 }
