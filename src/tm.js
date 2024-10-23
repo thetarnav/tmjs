@@ -34,6 +34,12 @@ export const URL_GRAMMAR_TYPESCRIPT = 'https://raw.githubusercontent.com/shikijs
  @typedef {T | T[]} Many
 */
 
+/* -------------------------------------------------------------------------------------------------
+
+	JSON GRAMMAR
+
+*/
+
 /**
  @typedef  {object}          JSON_Grammar
  @property {string}          scopeName
@@ -163,8 +169,17 @@ export function validate_capture(capture) {
 }
 
 /**
- @param   {JSON_Grammar} json
- @returns {Grammar}      */
+ * Parsing json grammar file to a struture expected by the parser.
+ * 
+ * **BEFORE USE:**
+ * 
+ * The json grammar needs their regex strings converted from oniguruma to js.
+ * `json_to_grammar` doesn't handle that, it assumes the regexes are already converted.
+ * 
+ * See the `"convert_tm_to_js.js"` file.
+ * 
+ * @param   {JSON_Grammar} json
+ * @returns {Grammar}      */
 export function json_to_grammar(json)
 {
 	/** @type {Repository} */ let repo = {}
@@ -267,37 +282,20 @@ function json_to_captures(json)
 	return captures
 }
 
-/**
- @typedef  {object}  Tokenizer
- @property {string}  code
- @property {string}  line
- @property {number}  pos_char
- @property {number}  pos_line
- @property {Token[]} tokens   preallocated array
- @property {number}  len      len of tokens
+/* -------------------------------------------------------------------------------------------------
+
+	PARSER
+	code -> Scope tree
+
 */
 
 /**
- @typedef  {object}   Token
- @property {number}   pos
- @property {number}   end
- @property {string[]} scopes
-*/
-
-/**
- @typedef  {object} Tokenizer2
+ @typedef  {object} Parser
  @property {string} code
  @property {string} line
  @property {number} line_pos
  @property {number} line_end
  @property {number} char_pos
-*/
-
-/**
- @typedef  {object} Token2
- @property {number} pos
- @property {number} end
- @property {Scope?} scope
 */
 
 /**
@@ -309,7 +307,6 @@ function json_to_captures(json)
  @property {Scope[]} children
 */
 
-
 /**
  yields {@link scope} and each parent until {@link until}
 
@@ -317,7 +314,7 @@ function json_to_captures(json)
 @param   {Scope?} [until]
 @returns {Generator<Scope>}
 */
-function* each_scope(scope, until = null) {
+export function* each_scope(scope, until = null) {
 	for (;;) {
 		yield scope
 		if (scope.parent == null || scope.parent === until)
@@ -327,7 +324,7 @@ function* each_scope(scope, until = null) {
 }
 
 /**
-@param   {Tokenizer2} t
+@param   {Parser} t
 @param   {number}     n
 @param   {Scope}      scope
 @returns {void}      */
@@ -346,41 +343,10 @@ function move_char_pos(t, n, scope) {
 /**
 @param   {string}  code
 @param   {Grammar} grammar
-@returns {Token[]} */
-export function code_to_tokens(code, grammar)
-{
-	let tokens = /** @type {Token[]} */ (new Array(code.length))
-	let source_scopes = [grammar.scope]
-
-	/** @type {Tokenizer} */ let t = {
-		code    : code,
-		line    : code,
-		pos_char: 0,
-		pos_line: 0,
-		tokens  : tokens,
-		len     : 0,
-	}
-
-	loop: while (t.pos_char < t.code.length)
-	{
-		for (let pattern of grammar.patterns) {
-			if (pattern_to_tokens(t, pattern, source_scopes)) {
-				continue loop
-			}
-		}
-		increment_pos(t, source_scopes)
-	}
-
-	return tokens.slice(0, t.len)
-}
-
-/**
-@param   {string}  code
-@param   {Grammar} grammar
-@returns {Scope} */
+@returns {Scope}   */
 export function parse_code(code, grammar) {
 
-	/** @type {Tokenizer2} */
+	/** @type {Parser} */
 	let t = {
 		code:     code,
 		line:     '',
@@ -410,7 +376,7 @@ export function parse_code(code, grammar) {
 }
 
 /**
-@param   {Tokenizer2} t
+@param   {Parser} t
 @param   {Pattern[]}  patterns
 @param   {Scope}      scope
 @returns {boolean}    found */
@@ -425,10 +391,10 @@ function parse_patterns(t, patterns, scope) {
 }
 
 /**
-@param   {Tokenizer2} t
-@param   {Pattern}    pattern
-@param   {Scope}      parent
-@returns {boolean}    */
+@param   {Parser}  t
+@param   {Pattern} pattern
+@param   {Scope}   parent
+@returns {boolean} */
 function parse_pattern(t, pattern, parent) {
 
 	// only patterns
@@ -446,7 +412,7 @@ function parse_pattern(t, pattern, parent) {
 	}
 
 	// begin
-	if (!match_captures_2(t, pattern.begin_match, pattern.begin_captures, pattern_scope)) {
+	if (!parse_match(t, pattern.begin_match, pattern.begin_captures, pattern_scope)) {
 		return false
 	}
 
@@ -463,7 +429,7 @@ function parse_pattern(t, pattern, parent) {
 
 		while (t.char_pos < t.code.length) {
 			// end
-			if (match_captures_2(t, pattern.end_match, pattern.end_captures, pattern_scope)) {
+			if (parse_match(t, pattern.end_match, pattern.end_captures, pattern_scope)) {
 				break
 			}
 			// paterns
@@ -491,12 +457,12 @@ function parse_pattern(t, pattern, parent) {
 }
 
 /**
-@param   {Tokenizer2} t
-@param   {RegExp}     regex
-@param   {Captures?}  captures
-@param   {Scope}      match_parent
-@returns {boolean} */
-function match_captures_2(t, regex, captures, match_parent) {
+@param   {Parser}    t
+@param   {RegExp}    regex
+@param   {Captures?} captures
+@param   {Scope}     match_parent
+@returns {boolean}   */
+function parse_match(t, regex, captures, match_parent) {
 
 	regex.lastIndex = t.char_pos-t.line_pos
 	let result = regex.exec(t.line)
@@ -556,6 +522,61 @@ function match_captures_2(t, regex, captures, match_parent) {
 	}
 
 	return true
+}
+
+/* -------------------------------------------------------------------------------------------------
+
+	TOKENIZER
+	code -> Token[]
+
+*/
+
+/**
+ @typedef  {object}  Tokenizer
+ @property {string}  code
+ @property {string}  line
+ @property {number}  pos_char
+ @property {number}  pos_line
+ @property {Token[]} tokens   preallocated array
+ @property {number}  len      len of tokens
+*/
+
+/**
+ @typedef  {object}   Token
+ @property {number}   pos
+ @property {number}   end
+ @property {string[]} scopes
+*/
+
+/**
+@param   {string}  code
+@param   {Grammar} grammar
+@returns {Token[]} */
+export function code_to_tokens(code, grammar)
+{
+	let tokens = /** @type {Token[]} */ (new Array(code.length))
+	let source_scopes = [grammar.scope]
+
+	/** @type {Tokenizer} */ let t = {
+		code    : code,
+		line    : code,
+		pos_char: 0,
+		pos_line: 0,
+		tokens  : tokens,
+		len     : 0,
+	}
+
+	loop: while (t.pos_char < t.code.length)
+	{
+		for (let pattern of grammar.patterns) {
+			if (pattern_to_tokens(t, pattern, source_scopes)) {
+				continue loop
+			}
+		}
+		increment_pos(t, source_scopes)
+	}
+
+	return tokens.slice(0, t.len)
 }
 
 /**
@@ -746,6 +767,12 @@ function match_captures(t, result, captures, pattern_scopes)
 		t.line     = t.code.slice(t.pos_line)
 	}
 }
+
+/* -------------------------------------------------------------------------------------------------
+
+	THEME
+
+*/
 
 /**
  @typedef  {object}              JSON_Theme_Item
