@@ -273,16 +273,16 @@ function json_to_captures(json)
  @property {string}  line
  @property {number}  pos_char
  @property {number}  pos_line
- @property {Token[]} tokens // preallocated array
- @property {number}  len    // len of tokens
- */
+ @property {Token[]} tokens   preallocated array
+ @property {number}  len      len of tokens
+*/
 
 /**
  @typedef  {object}   Token
  @property {number}   pos
  @property {number}   end
  @property {string[]} scopes
- */
+*/
 
 /**
  @typedef  {object} Tokenizer2
