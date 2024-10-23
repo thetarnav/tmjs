@@ -282,6 +282,7 @@
 			"name": "Operators",
 			"scope": [
 				"keyword.operator",
+				"keyword.generator.asterisk",
 				"support.constant.property-value.scss,support.constant.property-value.css",
 				"keyword.operator.css,keyword.operator.scss,keyword.operator.less",
 				"support.type.vendored.property-name.css",
