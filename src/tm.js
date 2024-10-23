@@ -740,11 +740,7 @@ function match_captures(t, result, captures, pattern_scopes)
 				*/
 
 				if (pos >= prev.pos && end <= prev.end) {
-					t.tokens.splice(ti, 1, {
-						pos:    prev.pos,
-						end:    pos,
-						scopes: prev.scopes,
-					}, {
+					t.tokens.splice(ti+1, 0, {
 						pos:    pos,
 						end:    end,
 						scopes: [...prev.scopes, ...capture.names],
@@ -753,6 +749,7 @@ function match_captures(t, result, captures, pattern_scopes)
 						end:    prev.end,
 						scopes: prev.scopes,
 					})
+					prev.end = pos
 					t.len += 2
 					break
 				}
