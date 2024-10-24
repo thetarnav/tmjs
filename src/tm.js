@@ -765,15 +765,20 @@ function match_captures(t, result, captures, pattern_scopes)
 				*/
 
 				if (pos >= prev.pos && end <= prev.end) {
-					t.tokens.splice(ti+1, 0, {
+					for (let tj = t.len; tj > ti; tj--) {
+						t.tokens[tj+1] = t.tokens[tj-1]
+						t.tokens[tj+0] = t.tokens[tj-2]
+					}
+					t.tokens[ti+1] = {
 						pos:    pos,
 						end:    end,
 						scopes: [...prev.scopes, ...capture.names],
-					}, {
+					}
+					t.tokens[ti+2] = {
 						pos:    end,
 						end:    prev.end,
 						scopes: prev.scopes,
-					})
+					}
 					prev.end = pos
 					t.len += 2
 					break
