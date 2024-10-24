@@ -77,8 +77,8 @@ export const URL_GRAMMAR_TYPESCRIPT = 'https://raw.githubusercontent.com/shikijs
 
 /**
  @typedef  {object}    Pattern
- @property {string}    name
- @property {string}    content_name
+ @property {string[]}  names
+ @property {string[]}  content_names
  @property {RegExp?}   begin_match
  @property {Captures?} begin_captures
  @property {RegExp?}   end_match
@@ -205,8 +205,8 @@ function string_match_to_regex(str) {
 function json_to_pattern(json, repo_json, repo)
 {
 	/** @type {Pattern} */ let pattern = {
-		name          : "",
-		content_name  : "",
+		names         : [],
+		content_names : [],
 		begin_match   : null,
 		begin_captures: null,
 		end_match     : null,
@@ -219,7 +219,7 @@ function json_to_pattern(json, repo_json, repo)
 	{
 		pattern.begin_match = string_match_to_regex(json.match)
 
-		if (json.name) pattern.name = json.name
+		if (json.name) pattern.names = json.name.split(' ')
 
 		if (json.captures) pattern.begin_captures = json_to_captures(json.captures)
 
@@ -230,8 +230,8 @@ function json_to_pattern(json, repo_json, repo)
 		pattern.begin_match = string_match_to_regex(json.begin)
 		pattern.end_match   = string_match_to_regex(json.end)
 
-		if (json.name) pattern.name = json.name
-		if (json.contentName) pattern.content_name = json.contentName
+		if (json.name) pattern.names = json.name.split(' ')
+		if (json.contentName) pattern.content_names = json.contentName.split(' ')
 
 		if (json.beginCaptures) pattern.begin_captures = json_to_captures(json.beginCaptures)
 		if (json.endCaptures) pattern.end_captures = json_to_captures(json.endCaptures)
@@ -296,6 +296,7 @@ function json_to_captures(json)
  @property {number} line_pos
  @property {number} line_end
  @property {number} char_pos
+ @property {Scope}  match_scope container scope for parse_match
 */
 
 /**
@@ -308,13 +309,13 @@ function json_to_captures(json)
 */
 
 /**
- yields {@link scope} and each parent until {@link until}
+ yields {@link scope} and each parent until (not including) {@link until}
 
 @param   {Scope}   scope
 @param   {Scope?} [until]
 @returns {Generator<Scope>}
 */
-export function* each_scope(scope, until = null) {
+export function* each_scope_until(scope, until = null) {
 	for (;;) {
 		yield scope
 		if (scope.parent == null || scope.parent === until)
@@ -324,19 +325,29 @@ export function* each_scope(scope, until = null) {
 }
 
 /**
-@param   {Parser} t
+@param   {string[]} names
+@param   {number}   pos 
+@param   {number}   end
+@param   {Scope}    scope
+@param   {number}   [names_offset]
+@returns {Scope}    */
+function make_scope_for_each_name(names, pos, end, scope, names_offset = 0) {
+	for (let i = names_offset; i < names.length; i++) {
+		scope.children.push(scope = {pos, end, name: names[i], parent: scope, children: []})
+	}
+	return scope
+}
+
+/**
+@param   {Parser}     p
 @param   {number}     n
-@param   {Scope}      scope
 @returns {void}      */
-function move_char_pos(t, n, scope) {
-
-	t.char_pos += n
-	scope.end = t.char_pos
-
-	if (t.char_pos >= t.line_end) {
-		t.line_pos = t.line_end
-		while (t.line_end < t.code.length && t.code[t.line_end++] !== '\n') {}
-		t.line = t.code.slice(t.line_pos, t.line_end)
+function move_char_pos(p, n) {
+	p.char_pos += n
+	if (p.char_pos >= p.line_end) {
+		p.line_pos = p.line_end
+		while (p.line_end < p.code.length && p.code[p.line_end++] !== '\n') {}
+		p.line = p.code.slice(p.line_pos, p.line_end)
 	}
 }
 
@@ -348,27 +359,34 @@ export function parse_code(code, grammar) {
 
 	/** @type {Parser} */
 	let t = {
-		code:     code,
-		line:     '',
-		char_pos: 0,
-		line_end: 0,
-		line_pos: 0,
+		code:        code,
+		line:        '',
+		char_pos:    0,
+		line_end:    0,
+		line_pos:    0,
+		match_scope: {
+			pos:      0,
+			end:      0,
+			name:     '',
+			parent:   null,
+			children: [],
+		},
 	}
 
 	/** @type {Scope} */
 	let root = {
 		pos:      0,
-		end:      0,
+		end:      t.code.length,
 		name:     grammar.scope,
 		parent:   null,
 		children: [],
 	}
 
-	move_char_pos(t, 0, root)
+	move_char_pos(t, 0)
 
 	while (t.char_pos < t.code.length) {
 		if (!parse_patterns(t, grammar.patterns, root)) {
-			move_char_pos(t, 1, root)
+			move_char_pos(t, 1)
 		}
 	}
 
@@ -379,11 +397,12 @@ export function parse_code(code, grammar) {
 @param   {Parser} t
 @param   {Pattern[]}  patterns
 @param   {Scope}      scope
-@returns {boolean}    found */
+@returns {boolean} */
 function parse_patterns(t, patterns, scope) {
-
 	for (let pattern of patterns) {
-		if (parse_pattern(t, pattern, scope)) {
+		let pos_before = t.char_pos
+		parse_pattern(t, pattern, scope)
+		if (pos_before < t.char_pos) {
 			return true
 		}
 	}
@@ -394,88 +413,94 @@ function parse_patterns(t, patterns, scope) {
 @param   {Parser}  t
 @param   {Pattern} pattern
 @param   {Scope}   parent
-@returns {boolean} */
+@returns {void} */
 function parse_pattern(t, pattern, parent) {
 
 	// only patterns
 	if (pattern.begin_match === null) {
-		return parse_patterns(t, pattern.patterns, parent)
-	}
-
-	let pattern_start_pos = t.char_pos
-	let pattern_scope = pattern.name.length === 0 ? parent : {
-		pos:      t.char_pos,
-		end:      t.char_pos,
-		name:     pattern.name,
-		parent:   parent,
-		children: [],
+		parse_patterns(t, pattern.patterns, parent)
+		return
 	}
 
 	// begin
-	if (!parse_match(t, pattern.begin_match, pattern.begin_captures, pattern_scope)) {
-		return false
+	let pattern_pos = t.char_pos
+	if (!parse_match(t, pattern.begin_match, pattern.begin_captures)) {
+		return
+	}
+
+	let pattern_scope = make_scope_for_each_name(pattern.names, pattern_pos, t.char_pos, parent)
+	// begin match scopes
+	for (let scope of t.match_scope.children) {
+		pattern_scope.children.push(scope)
+		scope.parent = pattern_scope
 	}
 
 	// begin-end (+patterns)
 	if (pattern.end_match != null) {
 
-		let content_scope = pattern.content_name.length === 0 ? pattern_scope : {
-			pos:      t.char_pos,
-			end:      t.char_pos,
-			name:     pattern.content_name,
-			parent:   pattern_scope,
-			children: [],
-		}
+		let content_scope = make_scope_for_each_name(pattern.content_names, t.char_pos, t.char_pos, pattern_scope)
+		let content_end = t.char_pos
 
 		while (t.char_pos < t.code.length) {
 			// end
-			if (parse_match(t, pattern.end_match, pattern.end_captures, pattern_scope)) {
+			content_end = t.char_pos
+			if (parse_match(t, pattern.end_match, pattern.end_captures)) {
 				break
 			}
 			// paterns
 			if (!parse_patterns(t, pattern.patterns, content_scope)) {
-				move_char_pos(t, 1, content_scope)
+				move_char_pos(t, 1)
 			}
 		}
 
-		if (content_scope !== pattern_scope && content_scope.pos !== content_scope.end) {
-			pattern_scope.children.push(content_scope)
+		// end match scope
+		for (let scope of t.match_scope.children) {
+			pattern_scope.children.push(scope)
+			scope.parent = pattern_scope
+		}
+
+		// set content length
+		for (let scope of each_scope_until(content_scope, pattern_scope)) {
+			scope.end = content_end
 		}
 	}
 
-	// Sometimes the all of the matches return a result full of look-acheads
-	// where each result is empty but successful
-	// so the cursor doesn't move
-	// and can cause an infinite loop if `true` is returned
-	let success = pattern_start_pos !== t.char_pos
-
-	if (success && pattern_scope !== parent) {
-		parent.children.push(pattern_scope)
+	// set pattern length
+	for (let scope of each_scope_until(pattern_scope, parent)) {
+		scope.end = t.char_pos
 	}
-
-	return success
 }
 
 /**
 @param   {Parser}    t
 @param   {RegExp}    regex
 @param   {Captures?} captures
-@param   {Scope}     match_parent
 @returns {boolean}   */
-function parse_match(t, regex, captures, match_parent) {
+function parse_match(t, regex, captures) {
+
+	t.match_scope.children = [] // used in parse_pattern to get the scopes
 
 	regex.lastIndex = t.char_pos-t.line_pos
 	let result = regex.exec(t.line)
-	if (result == null)
+	if (result == null) {
 		return false
+	}
 
-	// Set the len of match_parent
-	// and move the cursor (changes line_pos!)
-	let line_pos = t.line_pos
-	move_char_pos(t, result[0].length, match_parent)
+	let match_len = result[0].length
 
-	if (captures == null)
+	// match with no length still counts
+	// (can be made entirely from a look-ahead)
+	if (match_len === 0) {
 		return true
+	}
+
+	// move the cursor (changes t.line_pos!)
+	let line_pos = t.line_pos
+	move_char_pos(t, match_len)
+
+	if (captures == null) {
+		return true
+	}
 
 	/*
 	 Find a parent scope for each capture
@@ -490,7 +515,10 @@ function parse_match(t, regex, captures, match_parent) {
 	               [bar]↑   (6) → try(5) → parent(3)
 	                  [;;]  (7) → try(6) → try(3) → parent(0)
 	*/
-	let scope = match_parent
+
+	let scope = t.match_scope
+	scope.pos = t.char_pos-match_len
+	scope.end = t.char_pos
 
 	for (let i = 0; i < result.length; i++) {
 
@@ -508,13 +536,10 @@ function parse_match(t, regex, captures, match_parent) {
 
 		for (;;) {
 			if (pos >= scope.pos && end <= scope.end) {
-				for (let name of capture.names) {
-					let parent = scope
-					parent.children.push(scope = {name, pos, end, parent, children: []})
-				}
+				scope = make_scope_for_each_name(capture.names, pos, end, scope)
 				break
 			}
-			if (scope.parent == null || scope === match_parent) {
+			if (scope.parent == null) {
 				break
 			}
 			scope = scope.parent
@@ -589,8 +614,8 @@ function pattern_to_tokens(t, pattern, parent_scopes)
 	// only patterns
 	if (pattern.begin_match === null)
 	{
-		let pattern_scopes = pattern.name.length > 0
-			? [...parent_scopes, pattern.name]
+		let pattern_scopes = pattern.names.length > 0
+			? [...parent_scopes, ...pattern.names]
 			: parent_scopes
 
 		for (let subpattern of pattern.patterns) {
@@ -608,8 +633,8 @@ function pattern_to_tokens(t, pattern, parent_scopes)
 		return false
 	}
 
-	let pattern_scopes = pattern.name.length > 0
-		? [...parent_scopes, pattern.name]
+	let pattern_scopes = pattern.names.length > 0
+		? [...parent_scopes, ...pattern.names]
 		: parent_scopes
 
 	let start_pos_char = t.pos_char
@@ -619,8 +644,8 @@ function pattern_to_tokens(t, pattern, parent_scopes)
 	// begin-end (+patterns)
 	if (pattern.end_match != null) {
 
-		let content_scopes = pattern.content_name.length > 0
-			? [...pattern_scopes, pattern.content_name]
+		let content_scopes = pattern.content_names.length > 0
+			? [...pattern_scopes, ...pattern.content_names]
 			: pattern_scopes
 
 		loop:
