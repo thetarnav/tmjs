@@ -562,8 +562,7 @@ function parse_match(t, regex, captures) {
  @property {string}  line
  @property {number}  pos_char
  @property {number}  pos_line
- @property {Token[]} tokens   preallocated array
- @property {number}  len      len of tokens
+ @property {Token[]} tokens
 */
 
 /**
@@ -579,7 +578,6 @@ function parse_match(t, regex, captures) {
 @returns {Token[]} */
 export function code_to_tokens(code, grammar)
 {
-	let tokens = /** @type {Token[]} */ (new Array(code.length))
 	let source_scopes = [grammar.scope]
 
 	/** @type {Tokenizer} */ let t = {
@@ -587,8 +585,7 @@ export function code_to_tokens(code, grammar)
 		line    : code,
 		pos_char: 0,
 		pos_line: 0,
-		tokens  : tokens,
-		len     : 0,
+		tokens  : [],
 	}
 
 	loop: while (t.pos_char < t.code.length)
@@ -601,7 +598,7 @@ export function code_to_tokens(code, grammar)
 		increment_pos(t, source_scopes)
 	}
 
-	return tokens.slice(0, t.len)
+	return t.tokens
 }
 
 /**
@@ -683,14 +680,14 @@ function pattern_to_tokens(t, pattern, parent_scopes)
 function increment_pos(t, scopes)
 {
 	// token for skipped text
-	if (t.len > 0) {
-		let last_token = t.tokens[t.len-1]
+	if (t.tokens.length > 0) {
+		let last_token = t.tokens[t.tokens.length-1]
 		if (last_token.scopes !== scopes) {
-			t.tokens[t.len++] = {
+			t.tokens.push({
 				pos:    t.pos_char,
 				end:    t.pos_char+1,
 				scopes: scopes,
-			}
+			})
 		} else {
 			last_token.end += 1
 		}
@@ -721,21 +718,21 @@ function match_captures(t, result, captures, pattern_scopes)
 	let match_end = match_pos + match_len
 
 	if (captures == null) {
-		t.tokens[t.len++] = {
+		t.tokens.push({
 			pos:    match_pos,
 			end:    match_end,
 			scopes: pattern_scopes,
-		}
+		})
 	} else {
-		let ti_start = t.len
+		let ti_start = t.tokens.length
 
-		t.tokens[t.len++] = {
+		t.tokens.push({
 			pos:    match_pos,
 			end:    match_end,
 			scopes: captures[0] !== undefined && captures[0].names.length > 0
 				? [...pattern_scopes, ...captures[0].names]
 				: pattern_scopes,
-		}
+		})
 
 		for (let ri = 1; ri < result.length; ri++) {
 
@@ -754,7 +751,7 @@ function match_captures(t, result, captures, pattern_scopes)
 			if (end > match_end)
 				break
 
-			for (let ti = t.len-1; ti >= ti_start; ti--) {
+			for (let ti = t.tokens.length-1; ti >= ti_start; ti--) {
 				let prev = t.tokens[ti]
 
 				/*
@@ -765,22 +762,16 @@ function match_captures(t, result, captures, pattern_scopes)
 				*/
 
 				if (pos >= prev.pos && end <= prev.end) {
-					for (let tj = t.len; tj > ti; tj--) {
-						t.tokens[tj+1] = t.tokens[tj-1]
-						t.tokens[tj+0] = t.tokens[tj-2]
-					}
-					t.tokens[ti+1] = {
+					t.tokens.splice(ti+1, 0, {
 						pos:    pos,
 						end:    end,
 						scopes: [...prev.scopes, ...capture.names],
-					}
-					t.tokens[ti+2] = {
+					}, {
 						pos:    end,
 						end:    prev.end,
 						scopes: prev.scopes,
-					}
+					})
 					prev.end = pos
-					t.len += 2
 					break
 				}
 			}
