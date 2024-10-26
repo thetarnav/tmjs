@@ -21,7 +21,7 @@ const fetch_promise_lang_odin   = fetch(LANG_WEBPATH_ODIN)  .then(res => res.jso
 const fetch_promise_theme       = fetch(THEME_JSON_WEBPATH) .then(res => res.json())
 
 /**
-@param   {string} scope 
+@param   {string} scope
 @returns {string} */
 function trim_scope_lang(scope) {
 	if (scope.endsWith(scope_lang_suffix)) {
@@ -43,15 +43,17 @@ const THEME_COLORS = {
 	link:        '#0000ff',
 }
 
+const shiki_el = root.appendChild(h.div({class: 'shiki'}))
+shiki_el.style.color = THEME_COLORS.base
+
 /**
 @param   {tm.Scope} tree
 @param   {string}   src
 */
 async function render_tree_tokens(tree, src) {
 
-	let container = root.appendChild(h.div({class: 'shiki'}))
 	let elements = []
-	
+
 	for (let scope of tm.each_scope_tokens(tree)) {
 
 		let settings = tm_theme.get_scope_settings(scope.name, THEME_COLORS)
@@ -63,13 +65,19 @@ async function render_tree_tokens(tree, src) {
 
 		render_tooltip(el, trim_scope_lang(scope.name))
 
-		// take a break every 100 els
+		// render every 100 els
 		if (elements.length === 100) {
-			container.append(...elements)
+
+			shiki_el.replaceChild(h.span({}, elements), /**@type {Text}*/(shiki_el.lastChild))
+			shiki_el.appendChild(document.createTextNode(src.slice(scope.end)))
+
 			elements.length = 0
 			await new Promise(r => setTimeout(r))
 		}
 	}
+
+	shiki_el.removeChild(/**@type {Text}*/(shiki_el.lastChild))
+	shiki_el.append(...elements)
 }
 
 let count_scopes = 0
@@ -197,9 +205,11 @@ function render_tooltip(el, text) {
 export async function main() {
 	loading_indicator.style.display = 'block'
 
-	let code  = await (hash === 'ts' ? fetch_promise_sample_ts : fetch_promise_sample_odin)
-	let lang  = await (hash === 'ts' ? fetch_promise_lang_ts : fetch_promise_lang_odin)
-	let theme = await fetch_promise_theme
+	let code = await (hash === 'ts' ? fetch_promise_sample_ts : fetch_promise_sample_odin)
+	shiki_el.appendChild(document.createTextNode(code))
+
+	let lang = await (hash === 'ts' ? fetch_promise_lang_ts : fetch_promise_lang_odin)
+	// let theme = await fetch_promise_theme
 
 	if (!tm.validate_json_grammar(lang)) {
 		console.error('Invalid grammar')
