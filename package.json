@@ -12,9 +12,17 @@
 	"module": "./tm/tm.js",
 	"types": "./types/tm.d.ts",
 	"exports": {
-		"import": {
-			"types": "./types/tm.d.ts",
-			"default": "./tm/tm.js"
+		"*": {
+			"import": {
+				"types": "./types/tm.d.ts",
+				"default": "./tm/tm.js"
+			}
+		},
+		"/*": {
+			"import": {
+				"types": "./types/*.d.ts",
+				"default": "./tm/*.js"
+			}
 		}
 	},
 	"scripts": {
