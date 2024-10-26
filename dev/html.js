@@ -3,7 +3,7 @@
 
 /**
 @typedef  {object} Props
-@property {string} class
+@property {string} [class]
 */
 
 /**
@@ -25,7 +25,7 @@
 function _el(tag, props, children) {
 	let el = document.createElement(tag)
 
-	if (props && 'class' in props) {
+	if (props && props.class !== undefined) {
 		el.className = props.class
 	}
 
