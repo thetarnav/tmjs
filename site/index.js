@@ -41,6 +41,8 @@ const THEME_COLORS = {
 	function:    '#6e9ac4',
 	type:        '#30ab92',
 	link:        '#0000ff',
+	tag:         '#e07c3b',
+	attribute:   '#d69461',
 }
 
 const shiki_el = root.appendChild(h.div({class: 'shiki'}))
@@ -56,7 +58,7 @@ async function render_tree_tokens(tree, src) {
 
 	for (let scope of tm.each_scope_tokens(tree)) {
 
-		let settings = tm_theme.simple_get_scope_settings(scope.name, THEME_COLORS)
+		let settings = tm_theme.simple_get_scope_settings(scope, THEME_COLORS)
 
 		let el = h.span({class: 'token'}, src.slice(scope.pos, scope.end))
 		elements.push(el)

@@ -316,6 +316,17 @@ export function* each_scope_until(scope, until = null) {
 }
 
 /**
+@param   {Scope} scope 
+@returns {string[]} */
+export function scope_to_scope_names(scope) {
+	let names = []
+	for (let s of each_scope_until(scope)) {
+		names.unshift(s.name)
+	}
+	return names
+}
+
+/**
 @param   {string[]} names
 @param   {number}   pos 
 @param   {number}   end

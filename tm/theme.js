@@ -97,8 +97,8 @@ export function json_to_theme_items(json, source_scope)
 }
 
 /**
-@param   {string} scope 
-@param   {string} selector_part 
+@param   {string} scope
+@param   {string} selector_part
 @returns {boolean} */
 export function matches_scope(scope, selector_part) {
 	return scope.startsWith(selector_part) && (
@@ -106,7 +106,7 @@ export function matches_scope(scope, selector_part) {
 		scope[selector_part.length] === '.')
 }
 /**
-@param   {string}            scope 
+@param   {string}            scope
 @param   {readonly string[]} selector_parts
 @returns {boolean} */
 export function matches_scopes(scope, selector_parts) {
@@ -221,21 +221,53 @@ export function style_element_with_theme_settings(el, settings) {
 @property {string} function
 @property {string} type
 @property {string} link
+@property {string} tag
+@property {string} attribute
 */
 
 /**
-@param   {tm.Token}            token 
+@param   {tm.Token}            token
 @param   {Simple_Theme_Colors} colors
 @returns {JSON_Theme_Settings} */
 export function simple_get_token_settings(token, colors) {
+	return simple_get_names_settings(token.scopes, colors)
+}
+
+/**
+@param   {tm.Scope}            scope
+@param   {Simple_Theme_Colors} colors
+@returns {JSON_Theme_Settings} */
+export function simple_get_scope_settings(scope, colors) {
+
+	let names = []
+	for (let s of tm.each_scope_until(scope)) {
+		names.push(s.name)
+	}
 
 	/** @type {JSON_Theme_Settings} */
 	let styles = {
 		foreground: colors.base,
 	}
 
-	for (let scope of token.scopes) {
-		simple_set_scope_settings(styles, scope, colors)
+	for (let i = names.length-1; i >= 0; i--) {
+		simple_set_name_settings(styles, names[i], colors)
+	}
+
+	return styles
+}
+
+/**
+@param   {string[]}            names
+@param   {Simple_Theme_Colors} colors
+@returns {JSON_Theme_Settings} */
+export function simple_get_names_settings(names, colors) {
+	/** @type {JSON_Theme_Settings} */
+	let styles = {
+		foreground: colors.base,
+	}
+
+	for (let name of names) {
+		simple_set_name_settings(styles, name, colors)
 	}
 
 	return styles
@@ -245,21 +277,21 @@ export function simple_get_token_settings(token, colors) {
 @param   {string}              scope
 @param   {Simple_Theme_Colors} colors
 @returns {JSON_Theme_Settings} */
-export function simple_get_scope_settings(scope, colors) {
+export function simple_get_name_settings(scope, colors) {
 	/** @type {JSON_Theme_Settings} */
 	let styles = {
 		foreground: colors.base,
 	}
-	simple_set_scope_settings(styles, scope, colors)
+	simple_set_name_settings(styles, scope, colors)
 	return styles
 }
 
 /**
-@param   {JSON_Theme_Settings} styles 
+@param   {JSON_Theme_Settings} styles
 @param   {string}              scope
 @param   {Simple_Theme_Colors} colors
 @returns {void} */
-export function simple_set_scope_settings(styles, scope, colors) {
+export function simple_set_name_settings(styles, scope, colors) {
 	switch (true) {
 	// Reset
 	case matches_scope(scope, 'meta.template.expression'):
@@ -354,6 +386,14 @@ export function simple_set_scope_settings(styles, scope, colors) {
 	// Variables
 	case matches_scope(scope, 'variable'):
 		styles.foreground = colors.base
+		break
+	// Attributes
+	case matches_scope(scope, 'entity.other.attribute-name'):
+		styles.foreground = colors.attribute
+		break
+	// Tags
+	case matches_scope(scope, 'entity.name.tag'):
+		styles.foreground = colors.tag
 		break
 	}
 }
