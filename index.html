@@ -5,25 +5,13 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<meta name="darkreader-lock" />
 		<link rel="stylesheet" href="dev/styles.css" />
-		<script type="importmap">
-			{
-				"imports": {
-					"shiki":                      "./node_modules/shiki/dist/index.mjs",
-					"@shikijs/core":              "./node_modules/@shikijs/core/dist/index.mjs",
-					"@shikijs/core/wasm-inlined": "./node_modules/@shikijs/core/dist/wasm-inlined.mjs",
-					"shiki/core":                 "./node_modules/shiki/dist/core.mjs",
-					"shiki/wasm":                 "./node_modules/shiki/dist/wasm.mjs",
-					"shiki/langs":                "./node_modules/shiki/dist/langs.mjs",
-					"shiki/themes":               "./node_modules/shiki/dist/themes.mjs",
-					"shiki-core":                 "./node_modules/shiki-core/dist/index.mjs",
-					"shiki-core/wasm":            "./node_modules/shiki-core/dist/wasm.mjs",
-					"shiki-core/textmate":        "./node_modules/shiki-core/dist/textmate.mjs",
-					"oniguruma-to-js":            "./node_modules/oniguruma-to-js/dist/index.mjs",
-					"oniguruma-to-js/":           "./node_modules/oniguruma-to-js/dist/",
-					"regex":                      "./node_modules/regex/dist/regex.mjs"
-				}
-			}
-		</script>
+		<link rel="preload" href="dev/index.js"       as="script" crossorigin="anonymous" />
+		<link rel="preload" href="dev/html.js"        as="script" crossorigin="anonymous" />
+		<link rel="preload" href="dev/lang_odin.json" as="fetch"  crossorigin="anonymous" />
+		<link rel="preload" href="dev/lang_ts.json"   as="fetch"  crossorigin="anonymous" />
+		<link rel="preload" href="dev/sample.odin"    as="fetch"  crossorigin="anonymous" />
+		<link rel="preload" href="dev/sample.ts"      as="fetch"  crossorigin="anonymous" />
+		<link rel="preload" href="dev/theme.json"     as="fetch"  crossorigin="anonymous" />
 	</head>
 	<body>
 		<div id="root"></div>
@@ -32,6 +20,9 @@
 			<button onclick="location.hash='#odin';location.reload()">ODIN</button>
 			<button onclick="location.hash='#ts'  ;location.reload()">TYPESCRIPT</button>
 		</nav>
-		<script type="module" src="dev/index.js"></script>
+		<script type="module">
+			import * as app from './dev/index.js'
+			app.main()
+		</script>
 	</body>
 </html>

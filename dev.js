@@ -16,6 +16,8 @@ import {
 const dirname          = path.dirname(url.fileURLToPath(import.meta.url))
 const site_path        = path.join(dirname, SITE_DIRNAME)
 const src_path         = path.join(dirname, SRC_DIRNAME)
+const site_real_entry_path = path.join(site_path, 'index.js')
+const site_dev_entry_path  = path.join(site_path, 'dev.js')
 const theme_jsonc_path = path.join(site_path, THEME_JSONC_FILENAME)
 const theme_json_path  = path.join(site_path, THEME_JSON_FILENAME)
 
@@ -53,6 +55,10 @@ async function buildTheme() {
 @returns {Promise<void>}        */
 async function requestListener(req, res) {
 
+	res.setHeader("Access-Control-Allow-Origin", "*")
+	res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
 	if (!req.url || req.method !== "GET") {
 		res.writeHead(404)
 		res.end()
@@ -69,29 +75,18 @@ async function requestListener(req, res) {
 	}
 
 	/*
-	HTML
-	*/
-	if (req.url === "/") {
-		let html = await fsp.readFile('index.html', "utf8")
-		html += `
-<script>
-	const socket = new WebSocket("ws://localhost:${WEB_SOCKET_PORT}");
-	socket.addEventListener("message", () => {
-		location.reload();
-	});
-</script>`
-		res.writeHead(200, {"Content-Type": "text/html; charset=UTF-8"})
-		res.end(html)
-
-		console.log(`${req.method} ${req.url} 200`)
-		return
-	}
-
-	/*
 	Static files
 	*/
-	let relative_filepath = toWebFilepath(req.url)
+	let [url, query] = req.url.split('?')
+	query ??= ''
+	let relative_filepath = toWebFilepath(url)
 	let filepath = path.join(dirname, relative_filepath)
+
+	if (filepath === site_real_entry_path) {
+		if (!query) { // dev entry adds a query
+			filepath = site_dev_entry_path
+		}
+	}
 
 	let exists = await fileExists(filepath)
 	if (!exists) {

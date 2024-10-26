@@ -7,14 +7,17 @@ import {
 	LANG_WEBPATH_ODIN, LANG_WEBPATH_TS,
 } from '../constants.js'
 
-const root =              /** @type {HTMLElement} */ (document.getElementById('root'))
-const loading_indicator = /** @type {HTMLElement} */ (document.getElementById('loading_indicator'))
+const root =              /** @type {HTMLElement} */(document.getElementById('root'))
+const loading_indicator = /** @type {HTMLElement} */(document.getElementById('loading_indicator'))
 
 const hash = location.hash.slice(1) || 'odin'
-const code_webpath = hash === 'ts' ? SAMPLE_WEBPATH_TS : SAMPLE_WEBPATH_ODIN
-const lang_webpath = hash === 'ts' ? LANG_WEBPATH_TS   : LANG_WEBPATH_ODIN
-
 const scope_lang_suffix = '.'+hash
+
+const fetch_promise_sample_ts   = fetch(SAMPLE_WEBPATH_TS)  .then(res => res.text())
+const fetch_promise_sample_odin = fetch(SAMPLE_WEBPATH_ODIN).then(res => res.text())
+const fetch_promise_lang_ts     = fetch(LANG_WEBPATH_TS)    .then(res => res.json())
+const fetch_promise_lang_odin   = fetch(LANG_WEBPATH_ODIN)  .then(res => res.json())
+const fetch_promise_theme       = fetch(THEME_JSON_WEBPATH) .then(res => res.json())
 
 /**
 @param   {string} scope 
@@ -24,23 +27,6 @@ function trim_scope_lang(scope) {
 		return scope.slice(0, -scope_lang_suffix.length)
 	}
 	return scope
-}
-
-let code_promise  = fetchCode()
-let theme_promise = fetchTheme()
-let lang_promise  = fetchLang()
-
-/** @returns {Promise<string>} */
-function fetchCode() {
-	return fetch(code_webpath).then(res => res.text())
-}
-/** @returns {Promise<any>} */
-function fetchTheme() {
-	return fetch(THEME_JSON_WEBPATH).then(res => res.json())
-}
-/** @returns {Promise<any>} */
-async function fetchLang() {
-	return fetch(lang_webpath).then(res => res.json())
 }
 
 let count_scopes = 0
@@ -165,14 +151,12 @@ function render_tooltip(el, text) {
 	})
 }
 
-async function main() {
+export async function main() {
 	loading_indicator.style.display = 'block'
 
-	const [code, theme, lang] = await Promise.all([
-		code_promise,
-		theme_promise,
-		lang_promise,
-	])
+	let code  = await (hash === 'ts' ? fetch_promise_sample_ts : fetch_promise_sample_odin)
+	let lang  = await (hash === 'ts' ? fetch_promise_lang_ts : fetch_promise_lang_odin)
+	let theme = await fetch_promise_theme
 
 	if (!tm.validate_json_grammar(lang)) {
 		console.error('Invalid grammar')
@@ -192,5 +176,3 @@ async function main() {
 
 	loading_indicator.style.display = 'none'
 }
-
-main()
