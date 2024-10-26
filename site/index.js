@@ -1,6 +1,6 @@
-import * as tm from '../src/tm.js'
-import * as tm_theme from '../src/custom_theme.js'
-import * as h  from './html.js'
+import * as tm       from '../tm/tm.js'
+import * as tm_theme from '../tm/theme.js'
+import * as h        from './html.js'
 
 import {
 	THEME_JSON_WEBPATH,
@@ -30,7 +30,7 @@ function trim_scope_lang(scope) {
 	return scope
 }
 
-/** @type {tm_theme.Colors} */
+/** @type {tm_theme.Simple_Theme_Colors} */
 const THEME_COLORS = {
 	base:        '#b6aaad',
 	punctuation: '#b6aaadab',
@@ -47,8 +47,8 @@ const shiki_el = root.appendChild(h.div({class: 'shiki'}))
 shiki_el.style.color = THEME_COLORS.base
 
 /**
-@param   {tm.Scope} tree
-@param   {string}   src
+@param {tm.Scope} tree
+@param {string}   src
 */
 async function render_tree_tokens(tree, src) {
 
@@ -56,12 +56,12 @@ async function render_tree_tokens(tree, src) {
 
 	for (let scope of tm.each_scope_tokens(tree)) {
 
-		let settings = tm_theme.get_scope_settings(scope.name, THEME_COLORS)
+		let settings = tm_theme.simple_get_scope_settings(scope.name, THEME_COLORS)
 
 		let el = h.span({class: 'token'}, src.slice(scope.pos, scope.end))
 		elements.push(el)
 
-		tm.style_element_with_theme_settings(el, settings)
+		tm_theme.style_element_with_theme_settings(el, settings)
 
 		render_tooltip(el, trim_scope_lang(scope.name))
 
@@ -123,20 +123,20 @@ function render_tree(scope, src) {
 }
 
 /**
-@param   {tm.Token[]}      tokens
-@param   {tm.Theme_Item[]} theme_items
-@param   {string}          src
-@returns {void}            */
+@param   {tm.Token[]}            tokens
+@param   {tm_theme.Theme_Item[]} theme_items
+@param   {string}                src
+@returns {void}                  */
 function render_tokens(tokens, theme_items, src) {
 
 	/** @type {HTMLElement[]} */
 	let elements = new Array(tokens.length)
-	/** @type {tm.Scope_Theme_Settings_Cache} */
+	/** @type {tm_theme.Scope_Theme_Settings_Cache} */
 	let settings_cache = new Map()
 
 	for (let i = 0; i < tokens.length; i += 1) {
 		let token = tokens[i]
-		let settings = tm.match_token_theme(token, theme_items, settings_cache)
+		let settings = tm_theme.match_token_theme(token, theme_items, settings_cache)
 
 		let el = elements[i] = h.span({class: 'token'}, src.slice(token.pos, token.end))
 

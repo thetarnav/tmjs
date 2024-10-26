@@ -1,8 +1,8 @@
 import * as fs      from 'fs'
-import * as convert from './src/convert_tm_to_js.js'
+import * as convert from './tm/convert_tm_to_js.js'
 
 /**
-@param {string} input_filename 
+@param {string} input_filename
 @param {string} output_filename
 */
 function convert_json_file(input_filename, output_filename) {

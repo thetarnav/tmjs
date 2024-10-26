@@ -4,14 +4,14 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<meta name="darkreader-lock" />
-		<link rel="stylesheet" href="dev/styles.css" />
-		<link rel="preload" href="dev/index.js"       as="script" crossorigin="anonymous" />
-		<link rel="preload" href="dev/html.js"        as="script" crossorigin="anonymous" />
-		<link rel="preload" href="dev/lang_odin.json" as="fetch"  crossorigin="anonymous" />
-		<link rel="preload" href="dev/lang_ts.json"   as="fetch"  crossorigin="anonymous" />
-		<link rel="preload" href="dev/sample.odin"    as="fetch"  crossorigin="anonymous" />
-		<link rel="preload" href="dev/sample.ts"      as="fetch"  crossorigin="anonymous" />
-		<link rel="preload" href="dev/theme.json"     as="fetch"  crossorigin="anonymous" />
+		<link rel="stylesheet" href="site/styles.css" />
+		<link rel="preload" href="site/index.js"       as="script" crossorigin="anonymous" />
+		<link rel="preload" href="site/html.js"        as="script" crossorigin="anonymous" />
+		<link rel="preload" href="site/lang_odin.json" as="fetch"  crossorigin="anonymous" />
+		<link rel="preload" href="site/lang_ts.json"   as="fetch"  crossorigin="anonymous" />
+		<link rel="preload" href="site/sample.odin"    as="fetch"  crossorigin="anonymous" />
+		<link rel="preload" href="site/sample.ts"      as="fetch"  crossorigin="anonymous" />
+		<link rel="preload" href="site/theme.json"     as="fetch"  crossorigin="anonymous" />
 	</head>
 	<body>
 		<div id="root"></div>
@@ -21,7 +21,7 @@
 			<button onclick="location.hash='#ts'  ;location.reload()">TYPESCRIPT</button>
 		</nav>
 		<script type="module">
-			import * as app from './dev/index.js'
+			import * as app from './site/index.js'
 			app.main()
 		</script>
 	</body>

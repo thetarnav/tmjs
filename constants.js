@@ -8,8 +8,8 @@ export const LANG_FILENAME_TS     = 'lang_ts.json'
 export const SAMPLE_FILENAME_ODIN = 'sample.odin'
 export const SAMPLE_FILENAME_TS   = 'sample.ts'
 
-export const SITE_DIRNAME         = 'dev'
-export const SRC_DIRNAME          = 'src'
+export const SITE_DIRNAME         = 'site'
+export const SRC_DIRNAME          = 'tm'
 export const TYPES_DIRNAME        = 'types'
 
 export const SITE_WEBPATH         = SITE_DIRNAME+'/'

@@ -6,15 +6,15 @@
 	"private": false,
 	"sideEffects": false,
 	"files": [
-		"src/*",
+		"tm/*",
 		"types/*"
 	],
-	"module": "./src/tm.js",
+	"module": "./tm/tm.js",
 	"types": "./types/tm.d.ts",
 	"exports": {
 		"import": {
 			"types": "./types/tm.d.ts",
-			"default": "./src/tm.js"
+			"default": "./tm/tm.js"
 		}
 	},
 	"scripts": {
