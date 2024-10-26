@@ -549,6 +549,59 @@ function parse_match(t, regex, captures) {
 	return true
 }
 
+/**
+@param {Scope} scope 
+@returns {Generator<Scope>}
+*/
+export function* each_scope_tokens(scope) {
+
+	if (scope.children.length > 0) {
+
+		// before
+		if (scope.pos < scope.children[0].pos) {
+			yield {
+				pos:      scope.pos,
+				end:      scope.children[0].pos,
+				name:     scope.name,
+				parent:   scope.parent,
+				children: [],
+			}
+		}
+
+		// children with in-betweens
+		for (let i = 0; i < scope.children.length-1; i++) {
+
+			yield* each_scope_tokens(scope.children[i])
+
+			if (scope.children[i].end < scope.children[i+1].pos) {
+				yield {
+					pos:      scope.children[i].end,
+					end:      scope.children[i+1].pos,
+					name:     scope.name,
+					parent:   scope.parent,
+					children: [],
+				}
+			}
+		}
+		// last child
+		yield* each_scope_tokens(scope.children[scope.children.length-1])
+
+		// after
+		if (scope.children[scope.children.length-1].end < scope.end) {
+			yield {
+				pos:      scope.children[scope.children.length-1].end,
+				end:      scope.end,
+				name:     scope.name,
+				parent:   scope.parent,
+				children: [],
+			}
+		}
+
+	} else {
+		yield scope
+	}
+}
+
 /* -------------------------------------------------------------------------------------------------
 
 	TOKENIZER
@@ -969,4 +1022,18 @@ export function match_token_theme(token, theme, cache)
 
 	cache.set(cache_string, settings)
 	return settings
+}
+
+/**
+@param {{readonly style: CSSStyleDeclaration}} el
+@param {JSON_Theme_Settings}                   settings
+*/
+export function style_element_with_theme_settings(el, settings) {
+	if (settings.foreground) el.style.color           = settings.foreground
+	if (settings.background) el.style.backgroundColor = settings.background
+	if (settings.fontStyle) {
+		if (settings.fontStyle === 'italic')    el.style.fontStyle      = 'italic'
+		if (settings.fontStyle === 'bold')      el.style.fontWeight     = 'bold'
+		if (settings.fontStyle === 'underline') el.style.textDecoration = 'underline'
+	}
 }

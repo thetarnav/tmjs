@@ -1,4 +1,5 @@
 import * as tm from '../src/tm.js'
+import * as tm_theme from '../src/custom_theme.js'
 import * as h  from './html.js'
 
 import {
@@ -29,13 +30,55 @@ function trim_scope_lang(scope) {
 	return scope
 }
 
+/** @type {tm_theme.Colors} */
+const THEME_COLORS = {
+	base:        '#b6aaad',
+	punctuation: '#b6aaadab',
+	string:      '#82b057',
+	keyword:     '#c15c53',
+	const_lang:  '#d69461',
+	const_var:   '#cda881',
+	function:    '#6e9ac4',
+	type:        '#30ab92',
+	link:        '#0000ff',
+}
+
+/**
+@param   {tm.Scope} tree
+@param   {string}   src
+*/
+async function render_tree(tree, src) {
+
+	let container = root.appendChild(h.div({class: 'shiki'}))
+	let elements = []
+	
+	for (let scope of tm.each_scope_tokens(tree)) {
+
+		let settings = tm_theme.get_scope_settings(scope.name, THEME_COLORS)
+
+		let el = h.span({class: 'token'}, src.slice(scope.pos, scope.end))
+		elements.push(el)
+
+		tm.style_element_with_theme_settings(el, settings)
+
+		render_tooltip(el, trim_scope_lang(scope.name))
+
+		// take a break every 100 els
+		if (elements.length === 100) {
+			container.append(...elements)
+			elements.length = 0
+			await new Promise(r => setTimeout(r))
+		}
+	}
+}
+
 let count_scopes = 0
 
 /**
 @param   {tm.Scope} scope
 @param   {string}   src
 @returns {HTMLElement} */
-function render_scope(scope, src) {
+function render_scope_old(scope, src) {
 
 	count_scopes++
 
@@ -52,7 +95,7 @@ function render_scope(scope, src) {
 	render_tooltip(header, src.slice(scope.pos, scope.end))
 
 	for (let child of scope.children) {
-		children.appendChild(render_scope(child, src))
+		children.appendChild(render_scope_old(child, src))
 	}
 
     return container
@@ -62,10 +105,10 @@ function render_scope(scope, src) {
 @param   {tm.Scope} scope
 @param   {string}   src
 @returns {void}   */
-function render_tree(scope, src) {
+function render_tree_old(scope, src) {
 	root.appendChild(
 		h.div({class: 'tree-container'},
-			render_scope(scope, src),
+			render_scope_old(scope, src),
 		)
 	)
 	console.log(count_scopes)
@@ -165,13 +208,14 @@ export async function main() {
 
 	let grammar = tm.json_to_grammar(lang)
 
-	let theme_items = tm.json_to_theme_items(theme.tokenColors || [], grammar.scope)
-	let tokens      = tm.code_to_tokens(code, grammar)
-	render_tokens(tokens, theme_items, code)
+	// let theme_items = tm.json_to_theme_items(theme.tokenColors || [], grammar.scope)
+	// let tokens      = tm.code_to_tokens(code, grammar)
+	// render_tokens(tokens, theme_items, code)
 
-	await new Promise(r => setTimeout(r))
+	// await new Promise(r => setTimeout(r))
 
 	let tree = tm.parse_code(code, grammar)
+	// render_tree_old(tree, code)
 	render_tree(tree, code)
 
 	loading_indicator.style.display = 'none'
