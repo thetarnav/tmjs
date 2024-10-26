@@ -47,7 +47,7 @@ const THEME_COLORS = {
 @param   {tm.Scope} tree
 @param   {string}   src
 */
-async function render_tree(tree, src) {
+async function render_tree_tokens(tree, src) {
 
 	let container = root.appendChild(h.div({class: 'shiki'}))
 	let elements = []
@@ -78,7 +78,7 @@ let count_scopes = 0
 @param   {tm.Scope} scope
 @param   {string}   src
 @returns {HTMLElement} */
-function render_scope_old(scope, src) {
+function render_thee_scope(scope, src) {
 
 	count_scopes++
 
@@ -95,7 +95,7 @@ function render_scope_old(scope, src) {
 	render_tooltip(header, src.slice(scope.pos, scope.end))
 
 	for (let child of scope.children) {
-		children.appendChild(render_scope_old(child, src))
+		children.appendChild(render_thee_scope(child, src))
 	}
 
     return container
@@ -105,10 +105,10 @@ function render_scope_old(scope, src) {
 @param   {tm.Scope} scope
 @param   {string}   src
 @returns {void}   */
-function render_tree_old(scope, src) {
+function render_tree(scope, src) {
 	root.appendChild(
 		h.div({class: 'tree-container'},
-			render_scope_old(scope, src),
+			render_thee_scope(scope, src),
 		)
 	)
 	console.log(count_scopes)
@@ -216,7 +216,7 @@ export async function main() {
 
 	let tree = tm.parse_code(code, grammar)
 	// render_tree_old(tree, code)
-	render_tree(tree, code)
+	render_tree_tokens(tree, code)
 
 	loading_indicator.style.display = 'none'
 }
