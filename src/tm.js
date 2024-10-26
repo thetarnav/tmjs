@@ -872,6 +872,23 @@ export function json_to_theme_items(json, source_scope)
 /** @typedef {Map<string, JSON_Theme_Settings>} Scope_Theme_Settings_Cache */
 
 /**
+@param   {string} scope 
+@param   {string} selector_part 
+@returns {boolean} */
+export function matches_scope(scope, selector_part) {
+	return scope.startsWith(selector_part) && (
+		scope.length === selector_part.length ||
+		scope[selector_part.length] === '.')
+}
+/**
+@param   {string}            scope 
+@param   {readonly string[]} selector_parts
+@returns {boolean} */
+export function matches_scopes(scope, selector_parts) {
+	return selector_parts.some(part => matches_scope(scope, part))
+}
+
+/**
 @param   {Token}                      token
 @param   {Theme_Item[]}               theme
 @param   {Scope_Theme_Settings_Cache} cache
@@ -910,10 +927,7 @@ export function match_token_theme(token, theme, cache)
 					let scope = token.scopes[scope_idx]
 					scope_idx -= 1
 
-					if (scope.startsWith(selector_part) && (
-						scope.length === selector_part.length ||
-						scope[selector_part.length] === '.'
-					)) {
+					if (matches_scope(scope, selector_part)) {
 						specificity += (scope_idx+2) * 10 * selector_part.length
 						continue selector_loop
 					}
@@ -927,10 +941,7 @@ export function match_token_theme(token, theme, cache)
 				let scope = token.scopes[scope_idx]
 				scope_idx -= 1
 
-				if (scope.startsWith(selector_part) && (
-					scope.length === selector_part.length ||
-					scope[selector_part.length] === '.'
-				)) {
+				if (matches_scope(scope, selector_part)) {
 					specificity += (scope_idx+2) * 10 * selector_part.length
 					continue selector_loop
 				}
