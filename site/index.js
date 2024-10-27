@@ -296,7 +296,7 @@ function render_tooltip(el, text) {
 	})
 }
 
-export async function main() {
+async function main() {
 	loading_indicator.style.display = 'block'
 
 	let code = await (hash === 'ts' ? fetch_promise_sample_ts : fetch_promise_sample_odin)
@@ -327,3 +327,5 @@ export async function main() {
 
 	loading_indicator.style.display = 'none'
 }
+
+main()

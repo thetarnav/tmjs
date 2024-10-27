@@ -75,18 +75,31 @@ async function requestListener(req, res) {
 	}
 
 	/*
+	HTML
+	*/
+	if (req.url === "/") {
+		let html = await fsp.readFile('index.html', "utf8")
+		html += `
+<script>
+	const socket = new WebSocket("ws://localhost:${WEB_SOCKET_PORT}");
+	socket.addEventListener("message", () => {
+		location.reload();
+	});
+</script>`
+		res.writeHead(200, {"Content-Type": "text/html; charset=UTF-8"})
+		res.end(html)
+
+		console.log(`${req.method} ${req.url} 200`)
+		return
+	}
+
+	/*
 	Static files
 	*/
 	let [url, query] = req.url.split('?')
 	query ??= ''
 	let relative_filepath = toWebFilepath(url)
 	let filepath = path.join(dirname, relative_filepath)
-
-	if (filepath === site_real_entry_path) {
-		if (!query) { // dev entry adds a query
-			filepath = site_dev_entry_path
-		}
-	}
 
 	let exists = await fileExists(filepath)
 	if (!exists) {
