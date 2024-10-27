@@ -34,7 +34,7 @@ function clamp(value, min, max) {
  @param   {number} b
  @param   {number} t
  @returns {number} */
-export function lerp(a, b, t) {
+function lerp(a, b, t) {
 	return a + (b-a) * t
 }
 
@@ -189,9 +189,7 @@ async function render_tree_tokens(tree, src) {
 
 			zoom = clamp(zoom + delta_y*time_delta/20000, 1, 10)
 
-			// log_el.textContent = `zoom = ${zoom}`
-
-			let zoom_depth = zoom|0
+			log_el.textContent = `zoom = ${zoom}`
 
 			let x = 0, y = 0
 			let prev_line = 1
@@ -206,14 +204,12 @@ async function render_tree_tokens(tree, src) {
 
 				let w = item.scope.end-item.scope.pos
 
-				if (item.depth <= zoom_depth) {
+				if (item.depth <= zoom) {
 					// display
-				} else if (item.depth === zoom_depth+1) {
-					// display ...
-					w = Math.min(2, w)
+				} else if (item.depth <= zoom+1) {
+					w = lerp(w, Math.min(2, w), item.depth-zoom)
 				} else {
-					// hide
-					w = 0
+					w = lerp(Math.min(2, w), 0, clamp(item.depth-1-zoom, 0, 1))
 				}
 
 				if (item.x !== x || item.y !== y) {

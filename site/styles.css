@@ -122,7 +122,7 @@ code {
 	display:     inline-block;
 	white-space: pre;
 	height:      18px;
-	/* will-change: transform; */
+	will-change: transform, width;
 	overflow:    hidden;
 }
 .token:hover {
