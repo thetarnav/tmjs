@@ -158,9 +158,11 @@ async function render_tree_tokens(tree, src) {
 	/**
 	@typedef {object} Render_Item
 	@property {number}      depth
+	@property {number}      line
+	@property {number}      x
+	@property {number}      y
 	@property {tm.Scope}    scope
 	@property {HTMLElement} el
-	@property {'shown' | '...' | 'hidden'} state
 	*/
 
 	/** @type {Render_Item[]} */
@@ -168,7 +170,7 @@ async function render_tree_tokens(tree, src) {
 
 	{
 		let time_last = 0
-		let zoom = 10
+		let zoom = 6
 
 		let log_el = root.appendChild(h.div({class: 'log-display'}))
 
@@ -181,49 +183,40 @@ async function render_tree_tokens(tree, src) {
 			time_last = time
 
 			/* smoothed - applied only a part of delta a frame */
-			if (input_wheel_delta !== 0) {
-				let delta_y = lerp(0, input_wheel_delta, 0.2)
-				input_wheel_delta -= delta_y
+			let delta_y = lerp(0, input_wheel_delta, 0.2)
+			input_wheel_delta -= delta_y
 
-				zoom = clamp(zoom + delta_y*time_delta/20000, 1, 10)
-			}
+			zoom = clamp(zoom + delta_y*time_delta/20000, 1, 10)
 
 			log_el.textContent = `zoom = ${zoom}`
 
-			let depth_from_zoom = zoom|0
+			let zoom_depth = zoom|0
+
+			let x = 0, y = 0
+			let prev_line = 1
 
 			for (let item of items) {
+				
+				if (prev_line < item.line) {
+					y += item.line-prev_line
+					x = 0
+					prev_line = item.line
+				}
 
-				if (item.depth <= depth_from_zoom) {
+				if (item.x !== x || item.y !== y) {
+					item.el.style.transform = `translate(${x}ch, ${y*18}px)`
+					item.x = x
+					item.y = y
+				}
+
+				x += item.scope.end-item.scope.pos
+
+				if (item.depth <= zoom_depth) {
 					// display
-					if (item.state !== 'shown') {
-						item.state = 'shown'
-
-						item.el.style.display = 'inline'
-						item.el.style.width = 'auto'
-						item.el.style.height = 'auto'
-						item.el.style.background = 'transparent'
-					}
-				} else if (item.depth === depth_from_zoom+1) {
+				} else if (item.depth === zoom_depth+1) {
 					// display ...
-
-					if (item.scope.end - item.scope.pos > 3) {
-						if (item.state !== '...') {
-							item.state = '...'
-							item.el.style.display = 'inline-block'
-							item.el.style.width = '3ch'
-							item.el.style.height = '12px'
-							item.el.style.background = 'gray'
-							item.el.style.overflow = 'hidden'
-						}
-					}
 				} else {
 					// hide
-
-					if (item.state !== 'hidden') {
-						item.state = 'hidden'
-						item.el.style.display = 'none'
-					}
 				}
 			}
 
@@ -232,37 +225,59 @@ async function render_tree_tokens(tree, src) {
 		requestAnimationFrame(frame)
 	}
 
-	let elements = []
 
-	for (let scope of tm.each_scope_tokens(tree)) {
+	{
+		shiki_el.removeChild(/**@type {Text}*/(shiki_el.lastChild))
 
-		let depth = 0
-		for (let _ of tm.each_scope_until(scope)) {
-			depth++
+		let elements = []
+
+		let line = 1
+
+		for (let scope of tm.each_scope_tokens(tree)) {
+
+			let depth = 0
+			for (let _ of tm.each_scope_until(scope)) {
+				depth++
+			}
+
+			let settings = tm_theme.simple_get_scope_settings(scope, THEME_COLORS)
+
+			let lines = src.slice(scope.pos, scope.end).split('\n')
+			for (let j = 0; j < lines.length; j++) {
+
+				if (j > 0) {
+					line += 1
+				}
+
+				let text = lines[j]
+				if (text.length === 0)
+					continue
+
+				let el = h.span({class: 'token'}, text)
+				tm_theme.style_element_with_theme_settings(el, settings)
+				render_tooltip(el, trim_scope_lang(scope.name))
+
+				elements.push(el)
+				items.push({
+					el:    el,
+					depth: depth,
+					line:  line,
+					scope: scope,
+					x:     0,
+					y:     0,
+				})
+			}
+
+			// render every 100 els
+			if (elements.length === 100) {
+				shiki_el.append(...elements)
+				elements.length = 0
+				await new Promise(r => setTimeout(r))
+			}
 		}
-		let settings = tm_theme.simple_get_scope_settings(scope, THEME_COLORS)
 
-		let el = h.span({class: 'token'}, src.slice(scope.pos, scope.end))
-		elements.push(el)
-		items.push({el, depth, scope, state: 'shown'})
-
-		tm_theme.style_element_with_theme_settings(el, settings)
-
-		render_tooltip(el, trim_scope_lang(scope.name))
-
-		// render every 100 els
-		if (elements.length === 100) {
-
-			shiki_el.removeChild(/**@type {Text}*/(shiki_el.lastChild))
-			shiki_el.append(...elements, document.createTextNode(src.slice(scope.end)))
-
-			elements.length = 0
-			await new Promise(requestAnimationFrame)
-		}
+		shiki_el.append(...elements)
 	}
-
-	shiki_el.removeChild(/**@type {Text}*/(shiki_el.lastChild))
-	shiki_el.append(...elements)
 }
 
 let count_scopes = 0

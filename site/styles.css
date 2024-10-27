@@ -102,35 +102,43 @@ code {
 }
 
 .shiki {
-	tab-size: 4;
-	font-size: 13.5px;
+	tab-size:    4;
+	font-size:   13.5px;
 	line-height: 18px;
-	padding: 1em;
 	white-space: pre-wrap;
-	cursor: text;
-	overflow: hidden;
-	height: 100vh;
+	cursor:      text;
+	position:    relative;
+	overflow:    hidden;
+	height:      100vh;
 }
 .line {
 	display: block;
 	min-height: 18px;
 }
+.token {
+	position:    absolute;
+	top:         0;
+	left:        0;
+	display:     inline-block;
+	height:      18px;
+	will-change: transform;
+}
 .token:hover {
 	background-color: rgba(255, 255, 255, 0.1);
 }
 .scope-tooltip {
-	position: fixed;
-	z-index: 100;
-	left: 24px;
-	top: -9px;
-	pointer-events: none;
-	padding: 0 4px;
+	position:         fixed;
+	z-index:          100;
+	left:             24px;
+	top:              -9px;
+	pointer-events:   none;
+	padding:          0 4px;
 	background-color: rgba(0, 0, 0, 0.8);
-	border-radius: 4px;
-	word-wrap: break-word;
-	white-space: pre-wrap;
-	max-width: 200px;
-	min-width: 2ch;
+	border-radius:    4px;
+	word-wrap:        break-word;
+	white-space:      pre-wrap;
+	max-width:        200px;
+	min-width:        2ch;
 }
 
 .tree-container {
