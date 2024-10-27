@@ -161,6 +161,7 @@ async function render_tree_tokens(tree, src) {
 	@property {number}      line
 	@property {number}      x
 	@property {number}      y
+	@property {number}      w
 	@property {tm.Scope}    scope
 	@property {HTMLElement} el
 	*/
@@ -188,7 +189,7 @@ async function render_tree_tokens(tree, src) {
 
 			zoom = clamp(zoom + delta_y*time_delta/20000, 1, 10)
 
-			log_el.textContent = `zoom = ${zoom}`
+			// log_el.textContent = `zoom = ${zoom}`
 
 			let zoom_depth = zoom|0
 
@@ -203,21 +204,29 @@ async function render_tree_tokens(tree, src) {
 					prev_line = item.line
 				}
 
-				if (item.x !== x || item.y !== y) {
-					item.el.style.transform = `translate(${x}ch, ${y*18}px)`
-					item.x = x
-					item.y = y
-				}
-
-				x += item.scope.end-item.scope.pos
+				let w = item.scope.end-item.scope.pos
 
 				if (item.depth <= zoom_depth) {
 					// display
 				} else if (item.depth === zoom_depth+1) {
 					// display ...
+					w = Math.min(2, w)
 				} else {
 					// hide
+					w = 0
 				}
+
+				if (item.x !== x || item.y !== y) {
+					item.el.style.transform = `translate(${x}ch, ${y*18}px)`
+					item.x = x
+					item.y = y
+				}
+				if (item.w !== w) {
+					item.el.style.width = `${w}ch`
+					item.w = w
+				}
+
+				x += w
 			}
 
 			requestAnimationFrame(frame)
@@ -265,6 +274,7 @@ async function render_tree_tokens(tree, src) {
 					scope: scope,
 					x:     0,
 					y:     0,
+					w:     0,
 				})
 			}
 
