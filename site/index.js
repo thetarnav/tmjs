@@ -69,63 +69,60 @@ async function render_tree_nested(tree, src) {
 	}]
 
 	while (to_render_next.length > 0) {
-		render()
-		await new Promise(r => setTimeout(r))
-	}
-
-	function render() {
-
+		
 		[to_render, to_render_next] = [to_render_next, to_render]
 		to_render_next.length = 0
 
 		for (let item of to_render) {
 
-			if (item.scope.children.length > 0) {
+			if (item.scope.children.length === 0)
+				continue
 
-				let elements = []
+			let elements = []
 
-				// before
-				let before_text = src.slice(item.scope.pos, item.scope.children[0].pos)
-				if (before_text.length > 0) {
-					elements.push(before_text)
-				}
-
-				// children with in-betweens
-				for (let i = 0; i < item.scope.children.length; i++) {
-
-					let child_scope = item.scope.children[i]
-					let child_text  = src.slice(child_scope.pos, child_scope.end)
-					if (child_text.length > 0) {
-
-						let child_theme = tm_theme.simple_get_name_settings(child_scope.name, THEME_COLORS)
-						let child_el = h.span({class: 'token'}, child_text)
-						tm_theme.style_element_with_theme_settings(child_el, child_theme)
-						to_render_next.push({
-							depth: item.depth+1,
-							scope: child_scope,
-							el:    child_el,
-						})
-						elements.push(child_el)
-					}
-
-					if (i < item.scope.children.length-1) {
-						let after_child_text = src.slice(child_scope.end, item.scope.children[i+1].pos)
-						if (after_child_text.length > 0) {
-							elements.push(after_child_text)
-						}
-					}
-
-				}
-
-				// after
-				let after_text = src.slice(item.scope.children[item.scope.children.length-1].end, item.scope.end)
-				if (after_text.length > 0) {
-					elements.push(after_text)
-				}
-
-				item.el.replaceChildren(...elements)
+			// before
+			let before_text = src.slice(item.scope.pos, item.scope.children[0].pos)
+			if (before_text.length > 0) {
+				elements.push(before_text)
 			}
+
+			// children with in-betweens
+			for (let i = 0; i < item.scope.children.length; i++) {
+
+				let child_scope = item.scope.children[i]
+				let child_text  = src.slice(child_scope.pos, child_scope.end)
+				let child_theme = tm_theme.simple_get_name_settings(child_scope.name, THEME_COLORS)
+
+				let child_el = h.span({class: 'token'}, child_text)
+				tm_theme.style_element_with_theme_settings(child_el, child_theme)
+
+				to_render_next.push({
+					depth: item.depth+1,
+					scope: child_scope,
+					el:    child_el,
+				})
+				elements.push(child_el)
+
+				// between children
+				if (i < item.scope.children.length-1) {
+					let after_child_text = src.slice(child_scope.end, item.scope.children[i+1].pos)
+					if (after_child_text.length > 0) {
+						elements.push(after_child_text)
+					}
+				}
+
+			}
+
+			// after
+			let after_text = src.slice(item.scope.children[item.scope.children.length-1].end, item.scope.end)
+			if (after_text.length > 0) {
+				elements.push(after_text)
+			}
+
+			item.el.replaceChildren(...elements)
 		}
+
+		await new Promise(r => setTimeout(r))
 	}
 }
 
