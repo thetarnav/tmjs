@@ -21,6 +21,24 @@ const fetch_promise_lang_odin   = fetch(LANG_WEBPATH_ODIN)  .then(res => res.jso
 const fetch_promise_theme       = fetch(THEME_JSON_WEBPATH) .then(res => res.json())
 
 /**
+@param   {number} value
+@param   {number} min
+@param   {number} max
+@returns {number} */
+function clamp(value, min, max) {
+	return Math.min(Math.max(value, min), max)
+}
+
+/**
+ @param   {number} a
+ @param   {number} b
+ @param   {number} t
+ @returns {number} */
+export function lerp(a, b, t) {
+	return a + (b-a) * t
+}
+
+/**
 @param   {string} scope
 @returns {string} */
 function trim_scope_lang(scope) {
@@ -125,6 +143,12 @@ async function render_tree_nested(tree, src) {
 	}
 }
 
+let input_wheel_delta = 0
+
+window.addEventListener('wheel', e => {
+	input_wheel_delta += e.deltaY
+})
+
 /**
 @param {tm.Scope} tree
 @param {string}   src
@@ -136,10 +160,77 @@ async function render_tree_tokens(tree, src) {
 	@property {number}      depth
 	@property {tm.Scope}    scope
 	@property {HTMLElement} el
+	@property {'shown' | '...' | 'hidden'} state
 	*/
 
 	/** @type {Render_Item[]} */
 	let items = []
+
+	{
+		let time_last = 0
+		let zoom = 10
+
+		let log_el = root.appendChild(h.div({class: 'log-display'}))
+
+		/**
+		@param {number} time 
+		*/
+		function frame(time) {
+
+			let time_delta = Math.max(0, time - time_last)
+			time_last = time
+
+			/* smoothed - applied only a part of delta a frame */
+			if (input_wheel_delta !== 0) {
+				let delta_y = lerp(0, input_wheel_delta, 0.2)
+				input_wheel_delta -= delta_y
+
+				zoom = clamp(zoom + delta_y*time_delta/20000, 1, 10)
+			}
+
+			log_el.textContent = `zoom = ${zoom}`
+
+			let depth_from_zoom = zoom|0
+
+			for (let item of items) {
+
+				if (item.depth <= depth_from_zoom) {
+					// display
+					if (item.state !== 'shown') {
+						item.state = 'shown'
+
+						item.el.style.display = 'inline'
+						item.el.style.width = 'auto'
+						item.el.style.height = 'auto'
+						item.el.style.background = 'transparent'
+					}
+				} else if (item.depth === depth_from_zoom+1) {
+					// display ...
+
+					if (item.scope.end - item.scope.pos > 3) {
+						if (item.state !== '...') {
+							item.state = '...'
+							item.el.style.display = 'inline-block'
+							item.el.style.width = '3ch'
+							item.el.style.height = '12px'
+							item.el.style.background = 'gray'
+							item.el.style.overflow = 'hidden'
+						}
+					}
+				} else {
+					// hide
+
+					if (item.state !== 'hidden') {
+						item.state = 'hidden'
+						item.el.style.display = 'none'
+					}
+				}
+			}
+
+			requestAnimationFrame(frame)
+		}
+		requestAnimationFrame(frame)
+	}
 
 	let elements = []
 
@@ -153,7 +244,7 @@ async function render_tree_tokens(tree, src) {
 
 		let el = h.span({class: 'token'}, src.slice(scope.pos, scope.end))
 		elements.push(el)
-		items.push({el, depth, scope})
+		items.push({el, depth, scope, state: 'shown'})
 
 		tm_theme.style_element_with_theme_settings(el, settings)
 

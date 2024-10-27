@@ -108,6 +108,8 @@ code {
 	padding: 1em;
 	white-space: pre-wrap;
 	cursor: text;
+	overflow: hidden;
+	height: 100vh;
 }
 .line {
 	display: block;
@@ -156,6 +158,13 @@ code {
 .scope-children {
 	padding-left: 2ch;
 	border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.log-display {
+	position: fixed;
+	top: 20px;
+	left: 20px;
+	white-space: pre;
 }
 
 #loading_indicator {
