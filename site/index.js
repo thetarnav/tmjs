@@ -52,16 +52,103 @@ shiki_el.style.color = THEME_COLORS.base
 @param {tm.Scope} tree
 @param {string}   src
 */
+async function render_tree_nested(tree, src) {
+
+	/**
+	@typedef {object} Render_Item
+	@property {number}      depth
+	@property {tm.Scope}    scope
+	@property {HTMLElement} el
+	*/
+
+	/** @type {Render_Item[]} */ let to_render = []
+	/** @type {Render_Item[]} */ let to_render_next = [{
+		depth: 0,
+		scope: tree,
+		el:    shiki_el,
+	}]
+
+	while (to_render_next.length > 0) {
+		render()
+		await new Promise(r => setTimeout(r))
+	}
+
+	function render() {
+
+		[to_render, to_render_next] = [to_render_next, to_render]
+		to_render_next.length = 0
+
+		for (let item of to_render) {
+
+			if (item.scope.children.length > 0) {
+
+				let elements = []
+
+				// before
+				let before_text = src.slice(item.scope.pos, item.scope.children[0].pos)
+				if (before_text.length > 0) {
+					elements.push(before_text)
+				}
+
+				// children with in-betweens
+				for (let i = 0; i < item.scope.children.length; i++) {
+
+					let child_scope = item.scope.children[i]
+					let child_text  = src.slice(child_scope.pos, child_scope.end)
+					if (child_text.length > 0) {
+
+						let child_theme = tm_theme.simple_get_name_settings(child_scope.name, THEME_COLORS)
+						let child_el = h.span({class: 'token'}, child_text)
+						tm_theme.style_element_with_theme_settings(child_el, child_theme)
+						to_render_next.push({
+							depth: item.depth+1,
+							scope: child_scope,
+							el:    child_el,
+						})
+						elements.push(child_el)
+					}
+
+					if (i < item.scope.children.length-1) {
+						let after_child_text = src.slice(child_scope.end, item.scope.children[i+1].pos)
+						if (after_child_text.length > 0) {
+							elements.push(after_child_text)
+						}
+					}
+
+				}
+
+				// after
+				let after_text = src.slice(item.scope.children[item.scope.children.length-1].end, item.scope.end)
+				if (after_text.length > 0) {
+					elements.push(after_text)
+				}
+
+				item.el.replaceChildren(...elements)
+			}
+		}
+	}
+}
+
+/**
+@param {tm.Scope} tree
+@param {string}   src
+*/
 async function render_tree_tokens(tree, src) {
 
+	let items = []
 	let elements = []
 
 	for (let scope of tm.each_scope_tokens(tree)) {
 
+		let depth = 0
+		for (let _ of tm.each_scope_until(scope)) {
+			depth++
+		}
 		let settings = tm_theme.simple_get_scope_settings(scope, THEME_COLORS)
 
 		let el = h.span({class: 'token'}, src.slice(scope.pos, scope.end))
 		elements.push(el)
+		items.push({el, depth, scope})
 
 		tm_theme.style_element_with_theme_settings(el, settings)
 
@@ -70,8 +157,8 @@ async function render_tree_tokens(tree, src) {
 		// render every 100 els
 		if (elements.length === 100) {
 
-			shiki_el.replaceChild(h.span({}, elements), /**@type {Text}*/(shiki_el.lastChild))
-			shiki_el.appendChild(document.createTextNode(src.slice(scope.end)))
+			shiki_el.removeChild(/**@type {Text}*/(shiki_el.lastChild))
+			shiki_el.append(...elements, document.createTextNode(src.slice(scope.end)))
 
 			elements.length = 0
 			await new Promise(r => setTimeout(r))
@@ -228,7 +315,8 @@ export async function main() {
 
 	let tree = tm.parse_code(code, grammar)
 	// render_tree_old(tree, code)
-	render_tree_tokens(tree, code)
+	// render_tree_tokens(tree, code)
+	render_tree_nested(tree, code)
 
 	loading_indicator.style.display = 'none'
 }
