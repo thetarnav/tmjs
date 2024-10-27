@@ -196,20 +196,27 @@ async function render_tree_tokens(tree, src) {
 
 			for (let item of items) {
 				
-				if (prev_line < item.line) {
-					y += item.line-prev_line
-					x = 0
-					prev_line = item.line
-				}
-
 				let w = item.scope.end-item.scope.pos
+
+				let collapsed = false
 
 				if (item.depth <= zoom) {
 					// display
 				} else if (item.depth <= zoom+1) {
 					w = lerp(w, Math.min(2, w), item.depth-zoom)
+					// collapsed = true
 				} else {
 					w = lerp(Math.min(2, w), 0, clamp(item.depth-1-zoom, 0, 1))
+					collapsed = true
+				}
+
+				if (collapsed) {
+					prev_line = item.line
+				}
+				else if (prev_line < item.line) {
+					y += item.line-prev_line
+					x = 0
+					prev_line = item.line
 				}
 
 				if (item.x !== x || item.y !== y) {
