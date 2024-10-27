@@ -110,7 +110,6 @@ async function render_tree_nested(tree, src) {
 						elements.push(after_child_text)
 					}
 				}
-
 			}
 
 			// after
@@ -132,7 +131,16 @@ async function render_tree_nested(tree, src) {
 */
 async function render_tree_tokens(tree, src) {
 
+	/**
+	@typedef {object} Render_Item
+	@property {number}      depth
+	@property {tm.Scope}    scope
+	@property {HTMLElement} el
+	*/
+
+	/** @type {Render_Item[]} */
 	let items = []
+
 	let elements = []
 
 	for (let scope of tm.each_scope_tokens(tree)) {
@@ -158,7 +166,7 @@ async function render_tree_tokens(tree, src) {
 			shiki_el.append(...elements, document.createTextNode(src.slice(scope.end)))
 
 			elements.length = 0
-			await new Promise(r => setTimeout(r))
+			await new Promise(requestAnimationFrame)
 		}
 	}
 
@@ -292,7 +300,9 @@ export async function main() {
 	loading_indicator.style.display = 'block'
 
 	let code = await (hash === 'ts' ? fetch_promise_sample_ts : fetch_promise_sample_odin)
+
 	shiki_el.appendChild(document.createTextNode(code))
+	await new Promise(requestAnimationFrame)
 
 	let lang = await (hash === 'ts' ? fetch_promise_lang_ts : fetch_promise_lang_odin)
 	// let theme = await fetch_promise_theme
@@ -312,8 +322,8 @@ export async function main() {
 
 	let tree = tm.parse_code(code, grammar)
 	// render_tree_old(tree, code)
-	// render_tree_tokens(tree, code)
-	render_tree_nested(tree, code)
+	render_tree_tokens(tree, code)
+	// render_tree_nested(tree, code)
 
 	loading_indicator.style.display = 'none'
 }
